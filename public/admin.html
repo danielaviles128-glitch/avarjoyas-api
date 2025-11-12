@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de administración - AVAR Joyas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f8f8;
+      margin: 0;
+      padding: 40px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #b6922e;
+    }
+    form {
+      background: white;
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      background: #b6922e;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #a38025;
+    }
+    .mensaje {
+      text-align: center;
+      margin-top: 20px;
+      font-weight: bold;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Panel de Administración - AVAR Joyas</h1>
+  
+  <!-- Formulario para agregar producto -->
+  <form id="formProducto">
+    <h3>Agregar nuevo producto</h3>
+    <label>Nombre del producto:</label>
+    <input type="text" id="nombre" required>
+
+    <label>Precio:</label>
+    <input type="number" id="precio" required>
+
+    <label>Categoría:</label>
+    <input type="text" id="categoria" required>
+
+    <label>Stock:</label>
+    <input type="number" id="stock" required>
+
+    <label>Ruta(s) de imagen (separadas por coma):</label>
+    <input type="text" id="imagen" placeholder="img/ejemplo1.jpg, img/ejemplo2.jpg">
+    
+    <div id="previewContainer" style="text-align:center; margin:10px 0;">
+      <p style="font-size:14px; color:#777;">Vista previa:</p>
+      <div id="previews" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;"></div>
+    </div>
+
+    <button type="submit">Agregar producto</button>
+  </form>
+
+  <div class="mensaje" id="mensaje"></div>
+
+  <h2 style="text-align:center;">Productos existentes</h2>
+  <div id="listaProductos"></div>
+
+  <!-- Modal de edición -->
+  <div id="modalEditar" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+    <div style="background:white; padding:20px; border-radius:10px; max-width:500px; width:90%;">
+      <h3>Editar producto</h3>
+      <label>Nombre:</label>
+      <input type="text" id="editNombre">
+      <label>Precio:</label>
+      <input type="number" id="editPrecio">
+      <label>Categoría:</label>
+      <input type="text" id="editCategoria">
+      <label>Stock:</label>
+      <input type="number" id="editStock">
+      <label>Rutas de imagen (coma):</label>
+      <input type="text" id="editImagen">
+
+      <div id="editPreviewContainer" style="text-align:center; margin-top:10px;">
+        <p style="font-size:14px; color:#777;">Vista previa:</p>
+        <div id="editPreviews" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;"></div>
+      </div>
+
+      <div style="margin-top:10px; text-align:right;">
+        <button onclick="guardarEdicion()" style="background:#b6922e;color:white;border:none;padding:8px 12px;border-radius:6px;">Guardar</button>
+        <button onclick="cerrarModal()" style="background:#999;color:white;border:none;padding:8px 12px;border-radius:6px;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://avarjoyas-api.onrender.com";
+
+    const form = document.getElementById('formProducto');
+    const mensaje = document.getElementById('mensaje');
+    const lista = document.getElementById('listaProductos');
+    const modal = document.getElementById('modalEditar');
+    let productoEditando = null;
+
+    // --- Agregar producto ---
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const producto = {
+        nombre: nombre.value,
+        precio: parseInt(precio.value),
+        categoria: categoria.value,
+        stock: parseInt(stock.value),
+        imagen: imagen.value
+      };
+
+      const res = await fetch(`${API_URL}/api/productos`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(producto)
+      });
+
+      if (res.ok) {
+        mensaje.textContent = '✅ Producto agregado correctamente';
+        mensaje.style.color = 'green';
+        form.reset();
+        cargarProductos();
+      } else {
+        mensaje.textContent = '❌ Error al agregar producto';
+        mensaje.style.color = 'red';
+      }
+    });
+
+    // --- Cargar productos existentes ---
+    async function cargarProductos() {
+      const res = await fetch(`${API_URL}/api/productos`);
+      const productos = await res.json();
+      lista.innerHTML = '';
+      productos.forEach(p => {
+        const div = document.createElement('div');
+        div.style = "background:#fff; padding:10px; margin:10px auto; border-radius:10px; max-width:500px; box-shadow:0 2px 8px rgba(0,0,0,0.1)";
+        div.innerHTML = `
+          <strong>${p.nombre}</strong><br>
+          $${p.precio} | ${p.categoria} | Stock: ${p.stock}<br>
+          <small>${p.imagen}</small><br>
+          <button onclick="abrirModal(${p.id}, '${p.nombre}', ${p.precio}, '${p.categoria}', ${p.stock}, '${p.imagen}')" style="background:#3498db;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Editar</button>
+          <button onclick="eliminarProducto(${p.id})" style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Eliminar</button>
+        `;
+        lista.appendChild(div);
+      });
+    }
+
+    // --- Eliminar producto ---
+    async function eliminarProducto(id) {
+      if (!confirm('¿Seguro que deseas eliminar este producto?')) return;
+      const res = await fetch(`${API_URL}/api/productos/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        alert('✅ Producto eliminado');
+        cargarProductos();
+      } else {
+        alert('❌ Error al eliminar producto');
+      }
+    }
+
+    // --- Editar producto (abrir modal) ---
+    function abrirModal(id, nombre, precio, categoria, stock, imagen) {
+      productoEditando = id;
+      document.getElementById('editNombre').value = nombre;
+      document.getElementById('editPrecio').value = precio;
+      document.getElementById('editCategoria').value = categoria;
+      document.getElementById('editStock').value = stock;
+      document.getElementById('editImagen').value = imagen;
+      mostrarPrevisualizacionEditar(imagen);
+      modal.style.display = 'flex';
+    }
+
+    // --- Guardar cambios ---
+    async function guardarEdicion() {
+      const producto = {
+        nombre: document.getElementById('editNombre').value,
+        precio: parseInt(document.getElementById('editPrecio').value),
+        categoria: document.getElementById('editCategoria').value,
+        stock: parseInt(document.getElementById('editStock').value),
+        imagen: document.getElementById('editImagen').value
+      };
+
+      const res = await fetch(`${API_URL}/api/productos/${productoEditando}`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(producto)
+      });
+
+      if (res.ok) {
+        alert('✅ Producto actualizado');
+        modal.style.display = 'none';
+        cargarProductos();
+      } else {
+        alert('❌ Error al actualizar producto');
+      }
+    }
+
+    function cerrarModal() {
+      modal.style.display = 'none';
+    }
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) cerrarModal();
+    });
+
+    // --- Vista previa de imágenes ---
+    document.getElementById("imagen").addEventListener("input", function () {
+      const contenedor = document.getElementById("previews");
+      contenedor.innerHTML = "";
+      const rutas = this.value.split(",");
+      rutas.forEach(ruta => {
+        const img = document.createElement("img");
+        img.src = ruta.trim();
+        img.style = "width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ccc;";
+        contenedor.appendChild(img);
+      });
+    });
+
+    function mostrarPrevisualizacionEditar(cadena) {
+      const contenedor = document.getElementById("editPreviews");
+      contenedor.innerHTML = "";
+      const rutas = cadena.split(",");
+      rutas.forEach(ruta => {
+        const img = document.createElement("img");
+        img.src = ruta.trim();
+        img.style = "width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ccc;";
+        contenedor.appendChild(img);
+      });
+    }
+
+    document.getElementById("editImagen").addEventListener("input", function () {
+      mostrarPrevisualizacionEditar(this.value);
+    });
+
+<<<<<<< HEAD
+
+// === 🔒 Protección con contraseña simple ===
+const clave = prompt("Ingrese la clave de administrador:");
+
+if (clave !== "Avar2025!") {
+  alert("Acceso denegado. No tienes permiso para ingresar.");
+  window.location.href = "/"; // Redirige al inicio o a tu página principal
+} else {
+  cargarProductos(); // Solo carga los productos si la clave es correcta
+}
+=======
+    // --- Inicialización ---
+    cargarProductos();
+>>>>>>> f776309 (verificacion de conexion neon)
+  </script>
+</body>
+</html>

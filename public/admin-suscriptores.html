@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Suscriptores | AVAR Joyas</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #fffaf1;
+      color: #5a4632;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #caa64d;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    main {
+      padding: 40px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      border: 1px solid #e0d5b8;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #caa64d;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f4e6;
+    }
+
+    #exportar {
+      display: inline-block;
+      margin: 20px 0;
+      padding: 10px 20px;
+      background-color: #caa64d;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: 0.3s;
+    }
+
+    #exportar:hover {
+      background-color: #b6913e;
+    }
+  </style>
+</head>
+<body>
+  <header>Panel Administrativo — Suscriptores AVAR Joyas</header>
+
+<main>
+  <h1>Lista de suscriptores</h1>
+
+  <div style="text-align:center; margin-bottom: 20px;">
+    <input type="text" id="buscar" placeholder="Buscar por correo o fecha..." style="padding:8px; width:250px;">
+    <button id="btnBuscar" style="padding:8px 15px; background:#caa64d; color:white; border:none; cursor:pointer;">🔍 Buscar</button>
+  </div>
+
+  <button id="exportar">📥 Exportar a CSV</button>
+
+  <table id="tabla-suscriptores">
+<thead>
+  <tr>
+    <th>ID</th>
+    <th>Correo</th>
+    <th>Fecha</th>
+    <th>Acción</th>
+  </tr>
+</thead>
+    <tbody></tbody>
+  </table>
+
+  <div style="margin-top:20px; text-align:center;">
+    <button id="anterior" style="padding:8px 15px; margin-right:10px; background:#e0d5b8; border:none; cursor:pointer;">⬅ Anterior</button>
+    <button id="siguiente" style="padding:8px 15px; background:#caa64d; color:white; border:none; cursor:pointer;">Siguiente ➡</button>
+  </div>
+</main>
+
+<script>
+  // === CONFIGURACIÓN GENERAL ===
+  const API_BASE = "https://avarjoyas-api.onrender.com"; // 🔹 API base global
+  let pagina = 0;
+  const limite = 20; // registros por página
+
+  // === Cargar lista de suscriptores ===
+  async function cargarSuscriptores(search = "") {
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/suscriptores?search=${encodeURIComponent(search)}&limit=${limite}&offset=${pagina * limite}`
+      );
+      const data = await res.json();
+
+      const tbody = document.querySelector("#tabla-suscriptores tbody");
+      tbody.innerHTML = "";
+
+      if (data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align:center; color:#777;">No se encontraron resultados</td>
+          </tr>`;
+        return;
+      }
+
+      // Renderizar los datos en tabla
+      data.forEach(sub => {
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+          <td>${sub.id}</td>
+          <td>${sub.email}</td>
+          <td>${new Date(sub.fecha).toLocaleString()}</td>
+          <td>
+            <button onclick="eliminarSuscriptor(${sub.id})"
+              style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">
+              🗑️ Eliminar
+            </button>
+          </td>
+        `;
+        tbody.appendChild(fila);
+      });
+    } catch (err) {
+      console.error("Error al cargar suscriptores:", err);
+    }
+  }
+
+  // === Eliminar suscriptor ===
+  async function eliminarSuscriptor(id) {
+    if (!confirm("¿Seguro que deseas eliminar este suscriptor?")) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/suscriptores/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "❌ No se pudo eliminar el suscriptor");
+        return;
+      }
+
+      alert(data.message || "✅ Suscriptor eliminado correctamente");
+      cargarSuscriptores(); // 🔁 recarga la tabla
+    } catch (err) {
+      console.error("Error al eliminar suscriptor:", err);
+      alert("❌ Error al eliminar suscriptor");
+    }
+  }
+
+  // === Exportar a CSV ===
+  function exportarCSV() {
+    const filas = document.querySelectorAll("#tabla-suscriptores tr");
+    const csv = Array.from(filas)
+      .map(fila =>
+        Array.from(fila.children)
+          .map(td => `"${td.textContent}"`)
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "suscriptores_avarjoyas.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // === Navegación (paginación) ===
+  document.getElementById("siguiente").addEventListener("click", () => {
+    pagina++;
+    const valor = document.getElementById("buscar").value.trim();
+    cargarSuscriptores(valor);
+  });
+
+  document.getElementById("anterior").addEventListener("click", () => {
+    if (pagina > 0) pagina--;
+    const valor = document.getElementById("buscar").value.trim();
+    cargarSuscriptores(valor);
+  });
+
+  // === Buscar ===
+  document.getElementById("btnBuscar").addEventListener("click", () => {
+    pagina = 0;
+    const valor = document.getElementById("buscar").value.trim();
+    cargarSuscriptores(valor);
+  });
+
+  // === Exportar ===
+  document.getElementById("exportar").addEventListener("click", exportarCSV);
+
+  // === Acceso protegido ===
+  const clave = prompt("Ingrese la clave de administrador:");
+  if (clave !== "Avar2025!") {
+    alert("Acceso denegado");
+    window.location.href = "/";
+  } else {
+    document.addEventListener("DOMContentLoaded", () => cargarSuscriptores());
+  }
+</script>
+
+</body>
+</html>

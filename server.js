@@ -1,0 +1,256 @@
+const express = require("express");
+const cors = require("cors");
+const { Pool } = require("pg");
+require("dotenv").config();
+<<<<<<< HEAD
+const nodemailer = require("nodemailer");
+=======
+>>>>>>> f776309 (verificacion de conexion neon)
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+const app = express();
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type"]
+}));
+app.use(express.json());
+
+app.get("/api/productos", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM productos ORDER BY id DESC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error al obtener productos:", err);
+    res.status(500).json({ error: "Error al obtener productos" });
+  }
+});
+
+app.post("/api/productos", async (req, res) => {
+<<<<<<< HEAD
+  // Asegúrate que body-parser está configurado: app.use(express.json()) (ya lo tienes)
+  const { nombre, precio, categoria, stock, imagen, nueva_coleccion } = req.body;
+
+  // Validaciones básicas (opcional pero recomendable)
+  if (!nombre || precio == null || !categoria || stock == null) {
+    return res.status(400).json({ error: "Faltan campos obligatorios" });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO productos 
+        (nombre, precio, categoria, stock, imagen, nueva_coleccion) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING *`,
+      [nombre, precio, categoria, stock, imagen, nueva_coleccion ?? false]
+=======
+  const { nombre, precio, categoria, stock, imagen } = req.body;
+  try {
+    const result = await pool.query(
+      "INSERT INTO productos (nombre, precio, categoria, stock, imagen) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [nombre, precio, categoria, stock, imagen]
+>>>>>>> f776309 (verificacion de conexion neon)
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("Error al agregar producto:", err);
+    res.status(500).json({ error: "Error al agregar producto" });
+  }
+});
+
+app.put("/api/productos/:id", async (req, res) => {
+<<<<<<< HEAD
+  const { id } = req.params;
+  const { nombre, precio, categoria, stock, imagen, nueva_coleccion } = req.body;
+
+  // Validación mínima
+  if (!nombre || precio == null || !categoria || stock == null) {
+    return res.status(400).json({ error: "Faltan campos obligatorios" });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE productos 
+         SET nombre=$1, precio=$2, categoria=$3, stock=$4, imagen=$5, nueva_coleccion=$6 
+       WHERE id=$7 
+       RETURNING *`,
+      [nombre, precio, categoria, stock, imagen, nueva_coleccion ?? false, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error al actualizar producto:", err);
+    res.status(500).json({ error: "Error al actualizar producto" });
+  }
+});
+
+app.delete("/api/productos/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query("DELETE FROM productos WHERE id=$1", [id]);
+    res.sendStatus(204);
+  } catch (err) {
+    console.error("Error al eliminar producto:", err);
+    res.status(500).json({ error: "Error al eliminar producto" });
+  }
+});
+
+// === 📩 Ruta para suscripción de correos ===
+app.post("/api/suscribirse", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: "Correo electrónico no válido" });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO suscriptores (email)
+       VALUES ($1)
+       ON CONFLICT (email) DO NOTHING
+       RETURNING id, email, fecha`,
+      [email]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(200).json({ message: "Ya estás suscrito 🥰" });
+    }
+
+    res.status(201).json({ message: "¡Gracias por suscribirte! 💌" });
+  } catch (err) {
+    console.error("Error al guardar suscripción:", err);
+    res.status(500).json({ error: "Error al registrar la suscripción" });
+  }
+});
+// === 📋 Obtener lista de suscriptores (con filtro y paginación) ===
+app.get("/api/suscriptores", async (req, res) => {
+  try {
+    // Parámetros opcionales desde la URL
+    const { search = "", limit = 50, offset = 0 } = req.query;
+
+    // Si se envía un término de búsqueda, filtramos por email o fecha
+    const query = `
+      SELECT id, email, fecha
+      FROM suscriptores
+      WHERE email ILIKE $1 OR TO_CHAR(fecha, 'YYYY-MM-DD') ILIKE $1
+      ORDER BY fecha DESC
+      LIMIT $2 OFFSET $3
+    `;
+
+    const result = await pool.query(query, [`%${search}%`, limit, offset]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error al obtener suscriptores:", err);
+    res.status(500).json({ error: "Error al obtener la lista de suscriptores" });
+  }
+});
+// === 🗑️ Eliminar un suscriptor por ID ===
+app.delete("/api/suscriptores/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query("DELETE FROM suscriptores WHERE id = $1 RETURNING *", [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Suscriptor no encontrado" });
+    }
+
+    res.json({ message: "Suscriptor eliminado correctamente ✅" });
+  } catch (err) {
+    console.error("Error al eliminar suscriptor:", err);
+    res.status(500).json({ error: "Error al eliminar el suscriptor" });
+  }
+});
+
+app.get("/api/test", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json({ ok: true, time: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Error al probar conexión con Neon:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// === 📬 Ruta de contacto usando RESEND ===
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+app.post("/api/contacto", async (req, res) => {
+  const { nombre, email, mensaje } = req.body;
+
+  if (!nombre || !email || !mensaje) {
+    return res.status(400).json({ error: "Todos los campos son obligatorios." });
+  }
+
+  try {
+    await resend.emails.send({
+      from: "AVAR Joyas 💎 <onboarding@resend.dev>",
+      to: "avarjoyas@gmail.com", // aquí pones tu correo donde quieres recibir los mensajes
+      subject: "💌 Nuevo mensaje desde el formulario de contacto",
+      html: `
+        <h3>Nuevo mensaje de contacto</h3>
+        <p><strong>Nombre:</strong> ${nombre}</p>
+        <p><strong>Correo:</strong> ${email}</p>
+        <p><strong>Mensaje:</strong></p>
+        <p>${mensaje}</p>
+      `,
+    });
+
+    res.status(200).json({ success: "Mensaje enviado correctamente ✅" });
+  } catch (error) {
+    console.error("❌ Error al enviar el mensaje:", error);
+    res.status(500).json({ error: "Error al enviar el mensaje. Intenta de nuevo más tarde." });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`));
+=======
+  const { id } = req.params;
+  const { nombre, precio, categoria, stock, imagen } = req.body;
+  try {
+    const result = await pool.query(
+      "UPDATE productos SET nombre=$1, precio=$2, categoria=$3, stock=$4, imagen=$5 WHERE id=$6 RETURNING *",
+      [nombre, precio, categoria, stock, imagen, id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error al actualizar producto:", err);
+    res.status(500).json({ error: "Error al actualizar producto" });
+  }
+});
+
+app.delete("/api/productos/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query("DELETE FROM productos WHERE id=$1", [id]);
+    res.sendStatus(204);
+  } catch (err) {
+    console.error("Error al eliminar producto:", err);
+    res.status(500).json({ error: "Error al eliminar producto" });
+  }
+});
+
+app.get("/api/test", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json({ ok: true, time: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Error al probar conexión con Neon:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`));
+>>>>>>> f776309 (verificacion de conexion neon)

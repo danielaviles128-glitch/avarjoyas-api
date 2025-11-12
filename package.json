@@ -1,0 +1,27 @@
+{
+  "name": "avarjoyas-api",
+  "version": "1.0.0",
+  "description": "API para la base de datos de productos de AVAR Joyas",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "Daniel Avilés",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+<<<<<<< HEAD
+    "express-rate-limit": "^8.2.1",
+    "nodemailer": "^7.0.10",
+    "pg": "^8.16.3",
+    "resend": "^6.4.2",
+=======
+    "pg": "^8.16.3",
+>>>>>>> f776309 (verificacion de conexion neon)
+    "sqlite3": "^5.1.7"
+  }
+}
