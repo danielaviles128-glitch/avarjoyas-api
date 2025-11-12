@@ -2,10 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
 require("dotenv").config();
-<<<<<<< HEAD
 const nodemailer = require("nodemailer");
-=======
->>>>>>> f776309 (verificacion de conexion neon)
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -31,7 +28,6 @@ app.get("/api/productos", async (req, res) => {
 });
 
 app.post("/api/productos", async (req, res) => {
-<<<<<<< HEAD
   // Asegúrate que body-parser está configurado: app.use(express.json()) (ya lo tienes)
   const { nombre, precio, categoria, stock, imagen, nueva_coleccion } = req.body;
 
@@ -47,13 +43,6 @@ app.post("/api/productos", async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6) 
        RETURNING *`,
       [nombre, precio, categoria, stock, imagen, nueva_coleccion ?? false]
-=======
-  const { nombre, precio, categoria, stock, imagen } = req.body;
-  try {
-    const result = await pool.query(
-      "INSERT INTO productos (nombre, precio, categoria, stock, imagen) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [nombre, precio, categoria, stock, imagen]
->>>>>>> f776309 (verificacion de conexion neon)
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -63,7 +52,6 @@ app.post("/api/productos", async (req, res) => {
 });
 
 app.put("/api/productos/:id", async (req, res) => {
-<<<<<<< HEAD
   const { id } = req.params;
   const { nombre, precio, categoria, stock, imagen, nueva_coleccion } = req.body;
 
@@ -214,43 +202,3 @@ app.post("/api/contacto", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`));
-=======
-  const { id } = req.params;
-  const { nombre, precio, categoria, stock, imagen } = req.body;
-  try {
-    const result = await pool.query(
-      "UPDATE productos SET nombre=$1, precio=$2, categoria=$3, stock=$4, imagen=$5 WHERE id=$6 RETURNING *",
-      [nombre, precio, categoria, stock, imagen, id]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("Error al actualizar producto:", err);
-    res.status(500).json({ error: "Error al actualizar producto" });
-  }
-});
-
-app.delete("/api/productos/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    await pool.query("DELETE FROM productos WHERE id=$1", [id]);
-    res.sendStatus(204);
-  } catch (err) {
-    console.error("Error al eliminar producto:", err);
-    res.status(500).json({ error: "Error al eliminar producto" });
-  }
-});
-
-app.get("/api/test", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT NOW()");
-    res.json({ ok: true, time: result.rows[0] });
-  } catch (err) {
-    console.error("❌ Error al probar conexión con Neon:", err);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`));
->>>>>>> f776309 (verificacion de conexion neon)
