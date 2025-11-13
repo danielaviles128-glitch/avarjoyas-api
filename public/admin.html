@@ -79,7 +79,11 @@
 
     <label>Ruta(s) de imagen (separadas por coma):</label>
     <input type="text" id="imagen" placeholder="img/ejemplo1.jpg, img/ejemplo2.jpg">
-    
+    <label>
+    <input type="checkbox" id="nueva_coleccion">
+      Nueva colección
+    </label>
+
     <div id="previewContainer" style="text-align:center; margin:10px 0;">
       <p style="font-size:14px; color:#777;">Vista previa:</p>
       <div id="previews" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;"></div>
@@ -107,6 +111,10 @@
       <input type="number" id="editStock">
       <label>Rutas de imagen (coma):</label>
       <input type="text" id="editImagen">
+      <label style="margin-top:10px;">
+      <input type="checkbox" id="editNuevaColeccion">
+        Nueva colección
+      </label>
 
       <div id="editPreviewContainer" style="text-align:center; margin-top:10px;">
         <p style="font-size:14px; color:#777;">Vista previa:</p>
@@ -137,8 +145,10 @@
         precio: parseInt(precio.value),
         categoria: categoria.value,
         stock: parseInt(stock.value),
-        imagen: imagen.value
+        imagen: imagen.value,
+        nueva_coleccion: document.getElementById("nueva_coleccion").checked
       };
+
 
       const res = await fetch(`${API_URL}/api/productos`, {
         method: 'POST',
@@ -169,7 +179,7 @@
           <strong>${p.nombre}</strong><br>
           $${p.precio} | ${p.categoria} | Stock: ${p.stock}<br>
           <small>${p.imagen}</small><br>
-          <button onclick="abrirModal(${p.id}, '${p.nombre}', ${p.precio}, '${p.categoria}', ${p.stock}, '${p.imagen}')" style="background:#3498db;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Editar</button>
+          <button onclick="abrirModal(${p.id}, '${p.nombre}', ${p.precio}, '${p.categoria}', ${p.stock}, '${p.imagen}', ${p.nueva_coleccion})" style="background:#3498db;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Editar</button>
           <button onclick="eliminarProducto(${p.id})" style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Eliminar</button>
         `;
         lista.appendChild(div);
@@ -189,26 +199,29 @@
     }
 
     // --- Editar producto (abrir modal) ---
-    function abrirModal(id, nombre, precio, categoria, stock, imagen) {
-      productoEditando = id;
-      document.getElementById('editNombre').value = nombre;
-      document.getElementById('editPrecio').value = precio;
-      document.getElementById('editCategoria').value = categoria;
-      document.getElementById('editStock').value = stock;
-      document.getElementById('editImagen').value = imagen;
-      mostrarPrevisualizacionEditar(imagen);
-      modal.style.display = 'flex';
+    function abrirModal(id, nombre, precio, categoria, stock, imagen, nueva_coleccion = false) {
+    productoEditando = id;
+    document.getElementById('editNombre').value = nombre;
+    document.getElementById('editPrecio').value = precio;
+    document.getElementById('editCategoria').value = categoria;
+    document.getElementById('editStock').value = stock;
+    document.getElementById('editImagen').value = imagen;
+    document.getElementById('editNuevaColeccion').checked = nueva_coleccion;
+    mostrarPrevisualizacionEditar(imagen);
+    modal.style.display = 'flex';
     }
 
     // --- Guardar cambios ---
     async function guardarEdicion() {
-      const producto = {
-        nombre: document.getElementById('editNombre').value,
-        precio: parseInt(document.getElementById('editPrecio').value),
-        categoria: document.getElementById('editCategoria').value,
-        stock: parseInt(document.getElementById('editStock').value),
-        imagen: document.getElementById('editImagen').value
-      };
+    const producto = {
+      nombre: document.getElementById('editNombre').value,
+      precio: parseInt(document.getElementById('editPrecio').value),
+      categoria: document.getElementById('editCategoria').value,
+      stock: parseInt(document.getElementById('editStock').value),
+      imagen: document.getElementById('editImagen').value,
+      nueva_coleccion: document.getElementById('editNuevaColeccion').checked
+    };
+
 
       const res = await fetch(`${API_URL}/api/productos/${productoEditando}`, {
         method: 'PUT',

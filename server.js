@@ -28,25 +28,27 @@ app.get("/api/productos", async (req, res) => {
 });
 
 app.post("/api/productos", async (req, res) => {
-  // Asegúrate que body-parser está configurado: app.use(express.json()) (ya lo tienes)
   const { nombre, precio, categoria, stock, imagen, nueva_coleccion } = req.body;
 
-  // Validaciones básicas (opcional pero recomendable)
+  // Validaciones básicas
   if (!nombre || precio == null || !categoria || stock == null) {
     return res.status(400).json({ error: "Faltan campos obligatorios" });
   }
 
   try {
     const result = await pool.query(
-      `INSERT INTO productos 
-        (nombre, precio, categoria, stock, imagen, nueva_coleccion) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
+      `INSERT INTO productos (nombre, precio, categoria, stock, imagen, nueva_coleccion)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [nombre, precio, categoria, stock, imagen, nueva_coleccion ?? false]
+      [nombre, precio, categoria, stock, imagen, nueva_coleccion]
     );
-    res.status(201).json(result.rows[0]);
+
+    res.status(201).json({
+      mensaje: "✅ Producto agregado correctamente",
+      producto: result.rows[0]
+    });
   } catch (err) {
-    console.error("Error al agregar producto:", err);
+    console.error("❌ Error al agregar producto:", err);
     res.status(500).json({ error: "Error al agregar producto" });
   }
 });
@@ -55,7 +57,7 @@ app.put("/api/productos/:id", async (req, res) => {
   const { id } = req.params;
   const { nombre, precio, categoria, stock, imagen, nueva_coleccion } = req.body;
 
-  // Validación mínima
+  // Validaciones básicas
   if (!nombre || precio == null || !categoria || stock == null) {
     return res.status(400).json({ error: "Faltan campos obligatorios" });
   }
@@ -63,22 +65,26 @@ app.put("/api/productos/:id", async (req, res) => {
   try {
     const result = await pool.query(
       `UPDATE productos 
-         SET nombre=$1, precio=$2, categoria=$3, stock=$4, imagen=$5, nueva_coleccion=$6 
-       WHERE id=$7 
+       SET nombre=$1, precio=$2, categoria=$3, stock=$4, imagen=$5, nueva_coleccion=$6
+       WHERE id=$7
        RETURNING *`,
-      [nombre, precio, categoria, stock, imagen, nueva_coleccion ?? false, id]
+      [nombre, precio, categoria, stock, imagen, nueva_coleccion, id]
     );
 
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
 
-    res.json(result.rows[0]);
+    res.json({
+      mensaje: "✅ Producto actualizado correctamente",
+      producto: result.rows[0]
+    });
   } catch (err) {
-    console.error("Error al actualizar producto:", err);
+    console.error("❌ Error al actualizar producto:", err);
     res.status(500).json({ error: "Error al actualizar producto" });
   }
 });
+
 
 app.delete("/api/productos/:id", async (req, res) => {
   const { id } = req.params;
