@@ -1,600 +1,745 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Panel de administración - AVAR Joyas</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - AVAR Joyas</title>
   <style>
-    :root{--gold:#b6922e;--muted:#777;--card:#fff;--bg:#f6f6f6;--maxw:980px}
+    :root{
+      --gold:#b6922e;
+      --gold-dark:#a38025;
+      --muted:#777;
+      --bg:#f6f6f6;
+      --card:#fff;
+      --maxw:1100px;
+      --radius:12px;
+      --glass: rgba(255,255,255,0.6);
+    }
     *{box-sizing:border-box}
-    body{font-family:Inter,Arial,system-ui,-apple-system;background:var(--bg);margin:0;padding:28px;color:#222;display:flex;justify-content:center}
-    .container{width:100%;max-width:var(--maxw)}
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-    h1{margin:0;color:var(--gold);font-size:20px}
-    .top-actions{display:flex;gap:10px;align-items:center}
-    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 6px 24px rgba(20,20,20,0.06)}
-    form{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: linear-gradient(180deg,#fbfbfb,var(--bg));
+      color:#222;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:28px;
+    }
+    .app{width:100%; max-width:var(--maxw);}
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:18px;
+    }
+    h1{margin:0; color:var(--gold); font-size:20px}
+    .top-actions{display:flex; gap:10px; align-items:center}
+    .badge{font-size:13px; color:var(--muted)}
+    button { font-family:inherit; }
+
+    /* Layout */
+    .layout{display:grid; grid-template-columns:220px 1fr; gap:18px; align-items:start}
+    nav{position:sticky; top:28px}
+    .nav-card{background:var(--card); padding:12px; border-radius:var(--radius); box-shadow:0 8px 30px rgba(10,10,10,0.06)}
+    .brand{font-weight:700; color:var(--gold); margin-bottom:8px}
+    .menu{display:flex; flex-direction:column; gap:8px}
+    .menu button{text-align:left; padding:10px 12px; border-radius:8px; border:none; background:transparent; cursor:pointer}
+    .menu button.active{background:linear-gradient(90deg,var(--glass),#fff); box-shadow:inset 0 1px 0 rgba(255,255,255,0.6); border:1px solid #eee}
+    .menu .small{font-size:13px; color:var(--muted)}
+
+    /* Main card */
+    .card{background:var(--card); padding:16px; border-radius:var(--radius); box-shadow:0 10px 30px rgba(12,12,12,0.06)}
+    .controls{display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap}
+    .controls input, .controls select { padding:10px; border-radius:8px; border:1px solid #e6e6e6; min-width:160px}
+    .hrow{display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap}
+
+    /* Products grid */
+    .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+    .producto-card{padding:12px; border-radius:10px; background:var(--card); box-shadow:0 6px 18px rgba(10,10,10,0.04)}
+    .producto-card img{width:80px; height:80px; object-fit:cover; border-radius:8px}
+    .producto-actions{display:flex; gap:8px; margin-top:10px}
+
+    /* Forms */
+    form{display:grid; grid-template-columns:1fr 1fr; gap:10px}
     form .full{grid-column:1/3}
-    label{font-size:13px;color:#333;display:block;margin-bottom:6px}
-    input[type=text],input[type=number],select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd}
-    button.primary{background:var(--gold);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
-    button.ghost{background:#fff;border:1px solid #ddd;padding:8px 10px;border-radius:8px;cursor:pointer}
-    .upload-row{display:flex;gap:10px;align-items:center}
-    .upload-row input[type=file]{flex:1}
-    #estadoUpload{margin:0;font-size:13px;color:var(--muted)}
-    #previews,#editPreviews{display:flex;gap:8px;flex-wrap:wrap}
-    .thumb{width:80px;height:80px;border-radius:8px;overflow:hidden;position:relative;border:1px solid #e6e6e6}
-    .thumb img{width:100%;height:100%;object-fit:cover}
-    .thumb button{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer}
-    .controls{display:flex;gap:10px;align-items:center;margin:16px 0}
-    .controls input{padding:10px;border-radius:8px;border:1px solid #ddd}
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    .producto-card{padding:12px;border-radius:10px;background:var(--card);box-shadow:0 3px 12px rgba(10,10,10,0.04)}
-    .producto-card h4{margin:0 0 6px 0}
-    .producto-card small{display:block;color:var(--muted);word-break:break-all;font-size:12px}
-    .producto-actions{display:flex;gap:8px;margin-top:10px}
-    .pagination{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:12px}
-    .pagination button{padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer}
-    #modalEditar{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1200}
-    #modalEditar .modal-card{width:100%;max-width:560px}
-    #loginOverlay{position:fixed;inset:0;background:linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0.4));display:flex;align-items:center;justify-content:center;z-index:9999}
-    #loginBox{width:100%;max-width:420px}
-    .muted{color:var(--muted); font-size:13px}
-    @media(max-width:720px){form{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
+    label{font-size:13px; color:#333}
+    input[type=text], input[type=number], select, textarea{width:100%; padding:10px; border-radius:8px; border:1px solid #e6e6e6}
+    textarea{min-height:90px; resize:vertical}
+    .thumb{width:80px; height:80px; border-radius:8px; overflow:hidden; position:relative; border:1px solid #eee}
+    .thumb img{width:100%; height:100%; object-fit:cover}
+    .thumb button{position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.6); color:#fff; border:none; width:22px; height:22px; border-radius:50%; cursor:pointer}
+
+    /* modal */
+    #modalEditar{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:3000}
+    #modalEditar .modal-card{width:100%; max-width:640px; padding:16px; border-radius:12px;}
+
+    /* table */
+    table{width:100%; border-collapse:collapse; border-radius:8px; overflow:hidden}
+    th, td{padding:10px; border-bottom:1px solid #f0ede6; text-align:left; font-size:14px}
+    th{background:var(--gold); color:#fff; font-weight:600}
+    tbody tr:nth-child(even){background:#fffaf5}
+
+    /* pagination */
+    .pagination{display:flex; gap:6px; align-items:center; justify-content:center; margin-top:12px}
+
+    /* login overlay */
+    #loginOverlay{position:fixed; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0.4)); display:flex; align-items:center; justify-content:center; z-index:9999}
+    #loginBox{width:100%; max-width:420px; padding:18px; border-radius:10px; background:var(--card); box-shadow:0 10px 40px rgba(10,10,10,0.2)}
+
+    /* responsive */
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr; }
+      nav{position:static}
+      .grid{grid-template-columns:1fr}
+      form{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
-  <div class="container" id="appContainer" aria-live="polite">
+  <div class="app">
     <header>
-      <h1>Panel de Administración — AVAR Joyas</h1>
+      <h1>Panel administrativo — AVAR Joyas</h1>
       <div class="top-actions">
-        <div id="usuarioBadge" class="muted"></div>
-        <button id="logoutBtn" class="ghost" style="display:none">Cerrar sesión</button>
+        <div class="badge" id="usuarioBadge"></div>
+        <button id="logoutBtn" style="display:none;padding:8px 12px;border-radius:8px;border:1px solid #ddd;background:white;cursor:pointer">Cerrar sesión</button>
       </div>
     </header>
 
-    <!-- AGREGAR PRODUCTO -->
-    <section class="card" aria-label="Agregar producto">
-      <form id="formProducto" autocomplete="off">
-        <div>
-          <label for="nombre">Nombre del producto</label>
-          <input type="text" id="nombre" required />
-        </div>
-
-        <div>
-          <label for="precio">Precio</label>
-          <input type="number" id="precio" required min="0" />
-        </div>
-
-        <div>
-          <label for="categoria">Categoría</label>
-          <select id="categoria">
-            <option value="">-- Selecciona --</option>
-            <option value="collar">Collares</option>
-            <option value="aretes">Aretes</option>
-            <option value="tobilleras">Tobilleras</option>
-            <option value="pulseras">Pulseras</option>
-            <option value="anillos">Anillos</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="stock">Stock</label>
-          <input type="number" id="stock" required min="0" />
-        </div>
-
-        <div class="full">
-          <label for="imagen">Ruta(s) de imagen (separadas por coma)</label>
-          <input type="text" id="imagen" placeholder="https://res.cloudinary.com/tu_cuenta/...jpg" />
-        </div>
-
-        <div class="full upload-row" aria-hidden="false">
-          <input type="file" id="fileUploader" accept="image/*" />
-          <button type="button" class="ghost" id="btnUpload">Subir imagen</button>
-          <p id="estadoUpload" class="muted">No has subido nada aún</p>
-        </div>
-
-        <div class="full" style="display:flex;align-items:center;gap:12px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <input type="checkbox" id="nueva_coleccion" style="width:18px;height:18px;" />
-            <label for="nueva_coleccion">¿Pertenece a la nueva colección?</label>
-          </div>
-          <div style="margin-left:auto;width:220px;">
-            <button type="submit" class="primary">Agregar producto</button>
+    <div class="layout">
+      <!-- NAV -->
+      <nav>
+        <div class="nav-card">
+          <div class="brand">AVAR — Admin</div>
+          <div style="font-size:13px; color:var(--muted); margin-bottom:10px">Gestión centralizada</div>
+          <div class="menu" role="navigation">
+            <button id="tabProductos" class="active">Productos <div class="small">Crear / Editar / Eliminar</div></button>
+            <button id="tabSuscriptores">Suscriptores <div class="small">Lista y exportar</div></button>
+            <button id="tabContactos">Contactos <div class="small">Mensajes recibidos</div></button>
+            <hr style="margin:10px 0; border:none; border-top:1px solid #f0ede6">
+            <div style="display:flex; gap:8px; align-items:center; justify-content:space-between;">
+              <small style="color:var(--muted)">Versión: 1.0</small>
+              <small style="color:var(--muted)">API: /api</small>
+            </div>
           </div>
         </div>
+      </nav>
 
-        <div class="full">
-          <div id="previewContainer">
-            <p style="margin:6px 0;color:var(--muted)">Vista previa</p>
-            <div id="previews" aria-live="polite"></div>
+      <!-- MAIN -->
+      <main>
+        <!-- PRODUCTS VIEW -->
+        <section id="viewProductos" class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px">
+            <h2 style="margin:0">Productos</h2>
+            <div style="color:var(--muted)">Administra tu catálogo</div>
           </div>
-        </div>
-      </form>
-    </section>
 
-    <div style="height:14px"></div>
+          <div class="hrow">
+            <div style="flex:1">
+              <form id="formProducto">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                  <div>
+                    <label>Nombre</label>
+                    <input id="nombre" type="text" required />
+                  </div>
+                  <div>
+                    <label>Precio</label>
+                    <input id="precio" type="number" required />
+                  </div>
+                  <div>
+                    <label>Categoría</label>
+                    <select id="categoria">
+                      <option value="">-- Selecciona --</option>
+                      <option value="collar">Collares</option>
+                      <option value="aretes">Aretes</option>
+                      <option value="tobilleras">Tobilleras</option>
+                      <option value="pulseras">Pulseras</option>
+                      <option value="anillos">Anillos</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Stock</label>
+                    <input id="stock" type="number" required />
+                  </div>
 
-    <!-- FILTROS / BUSCADOR -->
-    <section class="card" style="margin-top:10px">
-      <div class="controls">
-        <input id="buscador" placeholder="Buscar por nombre..." />
-        <select id="filtroCategoria">
-          <option value="">Todas las categorías</option>
+                  <div class="full" style="grid-column:1/3">
+                    <label>Ruta(s) de imagen (coma separadas) — o usa subir</label>
+                    <input id="imagen" type="text" placeholder="https://res.cloudinary.com/..." />
+                  </div>
+
+                  <div class="full upload-row" style="grid-column:1/3; display:flex; gap:8px; align-items:center;">
+                    <input type="file" id="fileUploader" accept="image/*" />
+                    <button type="button" onclick="subirImagenCloudinary()" style="padding:10px;border-radius:8px;border:1px solid #ddd;background:white;cursor:pointer">Subir imagen</button>
+                    <div id="estadoUpload" style="font-size:13px;color:var(--muted)">No has subido nada aún</div>
+                  </div>
+
+                  <div class="full" style="display:flex; align-items:center; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <input id="nueva_coleccion" type="checkbox" />
+                      <label for="nueva_coleccion">¿Nueva colección?</label>
+                    </div>
+                    <div style="margin-left:auto;">
+                      <button type="submit" class="primary" style="background:var(--gold); color:white; padding:10px 14px; border-radius:8px; border:none; cursor:pointer">Agregar producto</button>
+                    </div>
+                  </div>
+
+                  <div class="full" style="grid-column:1/3">
+                    <div id="previews" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px"></div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <hr style="margin:12px 0; border:none; border-top:1px solid #f0ede6">
+
+          <div class="controls" style="margin-bottom:8px">
+            <input id="buscador" placeholder="Buscar por nombre..." />
+            <select id="filtroCategoria">
+              <option value="">Todas las categorías</option>
+              <option value="collar">Collares</option>
+              <option value="aretes">Aretes</option>
+              <option value="tobilleras">Tobilleras</option>
+              <option value="pulseras">Pulseras</option>
+              <option value="anillos">Anillos</option>
+            </select>
+            <select id="orden">
+              <option value="new">Más recientes</option>
+              <option value="price-asc">Precio ↑</option>
+              <option value="price-desc">Precio ↓</option>
+            </select>
+            <div style="margin-left:auto; color:var(--muted)"><span id="totalCount">0</span> productos</div>
+          </div>
+
+          <div id="productosGrid" class="grid"></div>
+          <div class="pagination" id="paginacion"></div>
+        </section>
+
+        <!-- SUBSCRIBERS VIEW -->
+        <section id="viewSuscriptores" class="card" style="display:none">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h2 style="margin:0">Suscriptores</h2>
+            <div style="color:var(--muted)">Ver y exportar lista</div>
+          </div>
+
+          <div class="hrow">
+            <input id="buscarSub" placeholder="Buscar email o fecha..." style="min-width:260px" />
+            <button id="btnBuscarSub" style="padding:8px 12px; border-radius:8px; background:var(--gold); color:white; border:none; cursor:pointer">Buscar</button>
+            <button id="exportarSub" style="margin-left:auto; padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:white; cursor:pointer">📥 Exportar CSV</button>
+          </div>
+
+          <div style="overflow:auto">
+            <table id="tabla-suscriptores">
+              <thead>
+                <tr><th>ID</th><th>Correo</th><th>Fecha</th><th>Acción</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="pagination" style="margin-top:10px">
+            <button id="prevSub">⬅ Anterior</button>
+            <button id="nextSub">Siguiente ➡</button>
+          </div>
+        </section>
+
+        <!-- CONTACTS VIEW -->
+        <section id="viewContactos" class="card" style="display:none">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h2 style="margin:0">Contactos</h2>
+            <div style="color:var(--muted)">Mensajes enviados desde la web</div>
+          </div>
+
+          <div style="margin-bottom:8px">
+            <button id="refreshContactos" style="padding:8px 12px; border-radius:8px; background:var(--gold); color:white; border:none; cursor:pointer">Actualizar</button>
+            <button id="exportarContactos" style="margin-left:8px; padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:white; cursor:pointer">📥 Exportar CSV</button>
+          </div>
+
+          <div style="overflow:auto">
+            <table id="tabla-contactos">
+              <thead><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Mensaje</th><th>Fecha</th><th>Acción</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal editar -->
+  <div id="modalEditar">
+    <div class="modal-card card">
+      <h3>Editar producto</h3>
+      <div style="margin-top:8px">
+        <label>Nombre</label>
+        <input id="editNombre" type="text" />
+        <label style="margin-top:8px">Precio</label>
+        <input id="editPrecio" type="number" />
+        <label style="margin-top:8px">Categoría</label>
+        <select id="editCategoria">
           <option value="collar">Collares</option>
           <option value="aretes">Aretes</option>
           <option value="tobilleras">Tobilleras</option>
           <option value="pulseras">Pulseras</option>
           <option value="anillos">Anillos</option>
         </select>
-        <select id="orden" style="width:160px">
-          <option value="new">Orden: más recientes</option>
-          <option value="price-asc">Precio: menor a mayor</option>
-          <option value="price-desc">Precio: mayor a menor</option>
-        </select>
-        <div style="margin-left:auto;font-size:13px;color:var(--muted)"><span id="totalCount">0</span> productos</div>
-      </div>
+        <label style="margin-top:8px">Stock</label>
+        <input id="editStock" type="number" />
+        <label style="margin-top:8px">Rutas de imagen (coma)</label>
+        <input id="editImagen" type="text" />
+        <div id="editPreviews" style="display:flex; gap:8px; margin-top:8px"></div>
 
-      <div id="productosGrid" class="grid" aria-live="polite"></div>
-      <div class="pagination" id="paginacion" aria-label="Paginación"></div>
-    </section>
-
-    <div style="height:20px"></div>
-    <div id="mensaje" style="text-align:center;color:green"></div>
-  </div>
-
-  <!-- MODAL EDITAR -->
-  <div id="modalEditar" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-card card" style="padding:18px;">
-      <h3>Editar producto</h3>
-      <label>Nombre</label>
-      <input type="text" id="editNombre" />
-      <label>Precio</label>
-      <input type="number" id="editPrecio" />
-      <label>Categoría</label>
-      <select id="editCategoria">
-        <option value="collar">Collares</option>
-        <option value="aretes">Aretes</option>
-        <option value="tobilleras">Tobilleras</option>
-        <option value="pulseras">Pulseras</option>
-        <option value="anillos">Anillos</option>
-      </select>
-
-      <label>Stock</label>
-      <input type="number" id="editStock" />
-
-      <label>Rutas de imagen</label>
-      <input type="text" id="editImagen" />
-
-      <label style="margin-top:10px;">
-        <input type="checkbox" id="editNuevaColeccion" style="width:18px;height:18px; margin-right:6px;">
-        ¿Pertenece a la nueva colección?
-      </label>
-
-      <div id="editPreviews" style="margin:10px 0"></div>
-
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
-        <button id="btnGuardarEdit" class="primary">Guardar</button>
-        <button id="btnCerrarModal" class="ghost">Cancelar</button>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px">
+          <button onclick="guardarEdicion()" style="background:var(--gold); color:white; padding:8px 12px; border-radius:8px; border:none; cursor:pointer">Guardar</button>
+          <button onclick="cerrarModal()" style="padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:white; cursor:pointer">Cancelar</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- LOGIN OVERLAY -->
+  <!-- Login overlay -->
   <div id="loginOverlay">
     <div id="loginBox" class="card">
       <h3 style="margin-top:0">Iniciar sesión</h3>
       <label>Usuario</label>
-      <input id="loginUser" autocomplete="username" />
-      <label>Contraseña</label>
-      <input id="loginPass" type="password" autocomplete="current-password" />
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button id="loginBtn" class="primary">Entrar</button>
+      <input id="loginUser" type="text" />
+      <label style="margin-top:8px">Contraseña</label>
+      <input id="loginPass" type="password" />
+      <div style="display:flex; gap:8px; margin-top:12px">
+        <button id="loginBtn" style="background:var(--gold); color:white; padding:10px 14px; border-radius:8px; border:none; cursor:pointer">Entrar</button>
         <div style="flex:1"></div>
       </div>
-      <p id="loginMsg" style="color:red;margin-top:8px"></p>
+      <p id="loginMsg" style="color:red; margin-top:8px"></p>
     </div>
   </div>
 
-  <script>
-    (function () {
-      // CONFIG
-      const API_URL = "/"; // admin served from backend's /public
-      const CLOUD_NAME = "dt2qovj9c";
-      const UPLOAD_PRESET = "ml_default";
+<script>
+/* -------------- CONFIG -------------- */
+const API_BASE = "/";            // servidor (sirve desde /public)
+const CLOUD_NAME = "dt2qovj9c";  // tu cloud name
+const UPLOAD_PRESET = "ml_default"; // unsigned preset
+const tokenKey = "avar_token";
 
-      // STATE
-      let productos = [];
-      let currentPage = 1;
-      const perPage = 6;
-      const tokenKey = "avar_token";
-      let productoEditando = null;
+/* -------------- ESTADO -------------- */
+let productos = [];
+let productoEditando = null;
+let productPage = 1;
+const productsPerPage = 6;
 
-      // ELEMENTS
-      const logoutBtn = document.getElementById("logoutBtn");
-      const usuarioBadge = document.getElementById("usuarioBadge");
-      const mensajeEl = document.getElementById("mensaje");
-      const productosGrid = document.getElementById("productosGrid");
-      const paginacionEl = document.getElementById("paginacion");
-      const totalCountEl = document.getElementById("totalCount");
+let subsPage = 0;
+const subsLimit = 20;
 
-      // UTIL helpers
-      function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"'`]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[c])); }
-      function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&#34;'); }
-      function showMessage(text, color='green', timeout=3000){
-        mensajeEl.style.color = color;
-        mensajeEl.innerText = text;
-        if(timeout) setTimeout(()=>{ if(mensajeEl.innerText===text) mensajeEl.innerText=''; }, timeout);
-      }
+/* -------------- UI: Tabs -------------- */
+const tabProductos = document.getElementById("tabProductos");
+const tabSuscriptores = document.getElementById("tabSuscriptores");
+const tabContactos = document.getElementById("tabContactos");
+const views = { productos: document.getElementById("viewProductos"), suscriptores: document.getElementById("viewSuscriptores"), contactos: document.getElementById("viewContactos") };
 
-      // AUTH
-      logoutBtn.addEventListener("click", ()=>{
-        sessionStorage.removeItem(tokenKey);
-        location.reload();
-      });
+tabProductos.addEventListener("click", ()=> switchTab("productos"));
+tabSuscriptores.addEventListener("click", ()=> switchTab("suscriptores"));
+tabContactos.addEventListener("click", ()=> switchTab("contactos"));
 
-      async function checkAuth(){
-        const token = sessionStorage.getItem(tokenKey);
-        if (!token) return false;
-        try{
-          const res = await fetch('/api/auth-check', {headers: {'Authorization': 'Bearer '+token}});
-          if (res.ok){
-            const info = await res.json();
-            usuarioBadge.innerText = info.user || 'admin';
-            logoutBtn.style.display = 'inline-block';
-            document.getElementById('loginOverlay').style.display = 'none';
-            return true;
-          }
-        }catch(e){ console.warn('checkAuth error', e); }
-        return false;
-      }
+function switchTab(name){
+  Object.values(document.querySelectorAll(".menu button")).forEach(b=>b.classList.remove("active"));
+  if(name==="productos") tabProductos.classList.add("active");
+  if(name==="suscriptores") tabSuscriptores.classList.add("active");
+  if(name==="contactos") tabContactos.classList.add("active");
+  // mostrar vistas
+  views.productos.style.display = name==="productos" ? "block" : "none";
+  views.suscriptores.style.display = name==="suscriptores" ? "block" : "none";
+  views.contactos.style.display = name==="contactos" ? "block" : "none";
+}
 
-      // LOGIN
-      document.getElementById('loginBtn').addEventListener('click', async ()=>{
-        const u = document.getElementById('loginUser').value.trim();
-        const p = document.getElementById('loginPass').value.trim();
-        document.getElementById('loginMsg').innerText = '';
-        try{
-          const res = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user:u, password:p})});
-          if (!res.ok){
-            const err = await res.json().catch(()=>({error:'Credenciales inválidas'}));
-            document.getElementById('loginMsg').innerText = err.error || 'Credenciales inválidas';
-            return;
-          }
-          const data = await res.json();
-          sessionStorage.setItem(tokenKey, data.token);
-          await initApp();
-        }catch(e){ document.getElementById('loginMsg').innerText = 'Error de conexión'; console.error(e); }
-      });
+/* -------------- AUTH -------------- */
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
+  sessionStorage.removeItem(tokenKey);
+  location.reload();
+});
 
-      // INIT
-      async function initApp(){
-        const ok = await checkAuth();
-        if (!ok) return;
-        await cargarProductos();
-      }
-      initApp();
+async function checkAuth(){
+  const token = sessionStorage.getItem(tokenKey);
+  if (!token) return false;
+  try{
+    const res = await fetch('/api/auth-check', { headers: { 'Authorization': 'Bearer '+token }});
+    if (!res.ok) return false;
+    const info = await res.json();
+    document.getElementById('usuarioBadge').innerText = info.user || 'admin';
+    document.getElementById('logoutBtn').style.display = 'inline-block';
+    document.getElementById('loginOverlay').style.display = 'none';
+    return true;
+  }catch(e){
+    console.warn(e);
+    return false;
+  }
+}
 
-      // CARGAR PRODUCTOS
-      async function cargarProductos(){
-        try{
-          const res = await fetch('/api/productos');
-          productos = await res.json();
-          currentPage = 1;
-          renderProductos();
-        }catch(e){
-          console.error('Error cargarProductos', e);
-        }
-      }
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  document.getElementById('loginMsg').innerText = '';
+  try{
+    const res = await fetch('/api/login',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ user, password: pass }) });
+    if (!res.ok){
+      const err = await res.json();
+      document.getElementById('loginMsg').innerText = err.error || 'Credenciales inválidas';
+      return;
+    }
+    const data = await res.json();
+    sessionStorage.setItem(tokenKey, data.token);
+    await initApp();
+  }catch(e){
+    console.error(e);
+    document.getElementById('loginMsg').innerText = 'Error de conexión';
+  }
+});
 
-      // FILTRADO / ORDEN
-      function getFiltered(){
-        const q = (document.getElementById('buscador').value || '').toLowerCase();
-        const cat = document.getElementById('filtroCategoria').value;
-        let arr = (productos || []).filter(p => (p.nombre||'').toLowerCase().includes(q));
-        if (cat) {
-          arr = arr.filter(p => {
-            // blind against null/undefined
-            return String(p.categoria || '').toLowerCase() === String(cat).toLowerCase();
-          });
-        }
-        const orden = document.getElementById('orden').value;
-        if (orden === 'price-asc') arr.sort((a,b)=> (a.precio||0) - (b.precio||0));
-        if (orden === 'price-desc') arr.sort((a,b)=> (b.precio||0) - (a.precio||0));
-        if (orden === 'new') arr.sort((a,b)=> (b.id||0) - (a.id||0));
-        return arr;
-      }
+/* -------------- INIT -------------- */
+async function initApp(){
+  const ok = await checkAuth();
+  if (!ok) {
+    document.getElementById('loginOverlay').style.display = 'flex';
+    return;
+  }
+  // cargar por defecto productos
+  await cargarProductos();
+  cargarSuscriptores();
+  cargarContactos();
+}
+initApp();
 
-      // RENDER PRODUCTOS (sin HTML inline handlers)
-      function renderProductos(){
-        const arr = getFiltered();
-        totalCountEl.innerText = arr.length;
-        const start = (currentPage-1) * perPage;
-        const pageItems = arr.slice(start, start + perPage);
+/* -------------- PRODUCTS: CRUD, UI -------------- */
 
-        productosGrid.innerHTML = '';
-        pageItems.forEach(p => {
-          const card = document.createElement('div');
-          card.className = 'producto-card';
+async function cargarProductos(){
+  try{
+    const res = await fetch('/api/productos');
+    productos = await res.json();
+    productPage = 1;
+    renderProductos();
+  }catch(e){
+    console.error('Error cargando productos', e);
+  }
+}
 
-          const title = document.createElement('h4');
-          title.innerHTML = `${escapeHtml(p.nombre || '')} ${p.nueva_coleccion ? '<span style="color:var(--gold)">✨</span>' : ''}`;
-          card.appendChild(title);
+function getFilteredProducts(){
+  const q = document.getElementById('buscador').value.toLowerCase();
+  const cat = document.getElementById('filtroCategoria').value;
+  let arr = productos.filter(p => (p.nombre||'').toLowerCase().includes(q));
+  if (cat) arr = arr.filter(p => p.categoria === cat);
+  const orden = document.getElementById('orden').value;
+  if (orden === 'price-asc') arr.sort((a,b)=>a.precio-b.precio);
+  if (orden === 'price-desc') arr.sort((a,b)=>b.precio-a.precio);
+  if (orden === 'new') arr.sort((a,b)=>b.id - a.id);
+  return arr;
+}
 
-          const row = document.createElement('div');
-          row.style = 'display:flex;gap:10px;align-items:center';
+function renderProductos(){
+  const grid = document.getElementById('productosGrid');
+  const arr = getFilteredProducts();
+  document.getElementById('totalCount').innerText = arr.length;
+  const start = (productPage-1)*productsPerPage;
+  const pageItems = arr.slice(start, start + productsPerPage);
+  grid.innerHTML = '';
+  pageItems.forEach(p=>{
+    const div = document.createElement('div'); div.className = 'producto-card';
+    const firstImg = (p.imagen||'').split(',')[0] || '';
+    div.innerHTML = `
+      <h4 style="margin:0">${escapeHtml(p.nombre)} ${p.nueva_coleccion ? '<span style="color:var(--gold)">✨</span>':''}</h4>
+      <div style="display:flex; gap:12px; align-items:center; margin-top:8px">
+        <img src="${escapeAttr(firstImg)}" alt="" onerror="this.style.display='none'">
+        <div style="flex:1">
+          <div style="font-weight:600">$${Number(p.precio).toLocaleString('es-ES')}</div>
+          <div style="color:var(--muted)">${escapeHtml(p.categoria)} · Stock: ${p.stock}</div>
+        </div>
+      </div>
+      <small style="display:block; margin-top:8px; color:var(--muted); word-break:break-all">${escapeHtml(p.imagen||'')}</small>
+      <div class="producto-actions">
+        <button onclick="abrirModal(${p.id}, ${JSON.stringify(p.nombre)}, ${p.precio}, ${JSON.stringify(p.categoria)}, ${p.stock}, ${JSON.stringify(p.imagen)}, ${p.nueva_coleccion})" style="padding:8px;border-radius:8px;border:1px solid #ddd;background:white;cursor:pointer">Editar</button>
+        <button onclick="eliminarProducto(${p.id})" style="padding:8px;border-radius:8px;border:none;background:#ffecec;cursor:pointer">Eliminar</button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+  renderPagination(Math.ceil(arr.length/productsPerPage));
+}
 
-          const img = document.createElement('img');
-          const firstUrl = (p.imagen || '').split(',')[0].trim();
-          img.src = firstUrl || '';
-          img.alt = p.nombre || '';
-          img.style = 'width:80px;height:80px;object-fit:cover;border-radius:8px;';
-          img.onerror = function(){ this.style.display = 'none'; };
-          row.appendChild(img);
+function renderPagination(pages){
+  const cont = document.getElementById('paginacion');
+  cont.innerHTML = '';
+  if (pages <= 1) return;
+  for(let i=1;i<=pages;i++){
+    const btn = document.createElement('button');
+    btn.innerText = i;
+    btn.style.padding='6px 10px';
+    if (i===productPage) btn.style.fontWeight='700';
+    btn.addEventListener('click', ()=>{ productPage = i; renderProductos(); });
+    cont.appendChild(btn);
+  }
+}
 
-          const info = document.createElement('div');
-          info.style = 'flex:1';
-          const priceDiv = document.createElement('div');
-          priceDiv.textContent = '$' + Number(p.precio || 0).toLocaleString('es-ES');
-          const catDiv = document.createElement('div');
-          catDiv.style = 'color:var(--muted)';
-          catDiv.textContent = p.categoria || '';
-          info.appendChild(priceDiv);
-          info.appendChild(catDiv);
-          row.appendChild(info);
-          card.appendChild(row);
+document.getElementById('buscador').addEventListener('input', ()=>{ productPage=1; renderProductos(); });
+document.getElementById('filtroCategoria').addEventListener('change', ()=>{ productPage=1; renderProductos(); });
+document.getElementById('orden').addEventListener('change', ()=> renderProductos());
 
-          const small = document.createElement('small');
-          small.innerHTML = escapeHtml(p.imagen || '');
-          card.appendChild(small);
+async function eliminarProducto(id){
+  if (!confirm('¿Eliminar producto?')) return;
+  const token = sessionStorage.getItem(tokenKey);
+  try{
+    const res = await fetch(`/api/productos/${id}`, { method:'DELETE', headers:{ 'Authorization': 'Bearer '+token }});
+    if (!res.ok) {
+      alert('Error eliminando producto');
+    } else {
+      await cargarProductos();
+    }
+  }catch(e){
+    console.error(e);
+    alert('Error de conexión');
+  }
+}
 
-          const actions = document.createElement('div');
-          actions.className = 'producto-actions';
+/* -------------- ADD PRODUCT -------------- */
+document.getElementById('formProducto').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const token = sessionStorage.getItem(tokenKey);
+  const producto = {
+    nombre: document.getElementById('nombre').value.trim(),
+    precio: Number(document.getElementById('precio').value),
+    categoria: document.getElementById('categoria').value,
+    stock: Number(document.getElementById('stock').value),
+    imagen: document.getElementById('imagen').value.trim(),
+    nueva_coleccion: document.getElementById('nueva_coleccion').checked
+  };
+  try{
+    const res = await fetch('/api/productos', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer '+token }, body: JSON.stringify(producto) });
+    if (res.ok){
+      alert('Producto agregado');
+      document.getElementById('formProducto').reset();
+      document.getElementById('previews').innerHTML='';
+      await cargarProductos();
+    } else {
+      const data = await res.json();
+      alert('Error: ' + (data.error || 'No se pudo agregar'));
+    }
+  }catch(e){
+    console.error(e);
+    alert('Error de conexión');
+  }
+});
 
-          const btnEdit = document.createElement('button');
-          btnEdit.className = 'ghost';
-          btnEdit.textContent = 'Editar';
-          btnEdit.addEventListener('click', ()=> abrirModalSegura(p));
-          actions.appendChild(btnEdit);
+/* -------------- CLOUDINARY UPLOAD (one by one) -------------- */
+async function subirImagenCloudinary(){
+  const fileInput = document.getElementById('fileUploader');
+  const estado = document.getElementById('estadoUpload');
+  const campoImagen = document.getElementById('imagen');
+  if (!fileInput.files.length){ estado.innerText = 'Selecciona una imagen'; estado.style.color='red'; return; }
+  const file = fileInput.files[0];
+  estado.innerText = 'Subiendo...'; estado.style.color = '#b6922e';
+  const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', UPLOAD_PRESET); fd.append('folder','productos');
+  try{
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method:'POST', body: fd });
+    const data = await res.json();
+    if (data.secure_url){
+      estado.innerText = 'Subida ✔️'; estado.style.color='green';
+      campoImagen.value = campoImagen.value.trim() ? campoImagen.value + ', ' + data.secure_url : data.secure_url;
+      campoImagen.dispatchEvent(new Event('input'));
+      fileInput.value = '';
+    } else {
+      estado.innerText = 'Error al subir'; estado.style.color='red';
+    }
+  }catch(e){ console.error(e); estado.innerText='Error de red'; estado.style.color='red'; }
+}
 
-          const btnDelete = document.createElement('button');
-          btnDelete.className = 'ghost';
-          btnDelete.style = 'background:#ffecec;border:1px solid #f5c2c2';
-          btnDelete.textContent = 'Eliminar';
-          btnDelete.addEventListener('click', ()=> eliminarProducto(p.id));
-          actions.appendChild(btnDelete);
+/* -------------- IMAGE PREVIEWS & remove -------------- */
+document.getElementById('imagen').addEventListener('input', ()=>{
+  const cont = document.getElementById('previews'); cont.innerHTML='';
+  const arr = document.getElementById('imagen').value.split(',').map(s=>s.trim()).filter(Boolean);
+  arr.forEach((url, idx)=>{
+    const t = document.createElement('div'); t.className='thumb';
+    const img = document.createElement('img'); img.src = url;
+    const btn = document.createElement('button'); btn.innerText='×'; btn.title='Eliminar';
+    btn.addEventListener('click', ()=> removeImageFromInput('imagen', idx));
+    t.appendChild(img); t.appendChild(btn); cont.appendChild(t);
+  });
+});
 
-          card.appendChild(actions);
+function removeImageFromInput(id, idx){
+  const el = document.getElementById(id);
+  const arr = el.value.split(',').map(s=>s.trim()).filter(Boolean);
+  arr.splice(idx,1);
+  el.value = arr.join(', ');
+  el.dispatchEvent(new Event('input'));
+}
 
-          productosGrid.appendChild(card);
-        });
+/* -------------- EDIT PRODUCT (modal) -------------- */
+document.getElementById('editImagen')?.addEventListener?.('input', ()=> renderEditPreviews());
+function abrirModal(id, nombre, precio, categoria, stock, imagen, nueva_coleccion){
+  productoEditando = id;
+  document.getElementById('editNombre').value = nombre || '';
+  document.getElementById('editPrecio').value = precio || 0;
+  document.getElementById('editCategoria').value = categoria || '';
+  document.getElementById('editStock').value = stock || 0;
+  document.getElementById('editImagen').value = imagen || '';
+  // create checkbox field if not exists
+  let chk = document.getElementById('editNuevaColeccion');
+  if (!chk){
+    const label = document.createElement('label');
+    label.innerHTML = `<input id="editNuevaColeccion" type="checkbox" style="width:18px;height:18px;margin-right:6px"> ¿Pertenece a la nueva colección?`;
+    document.querySelector('#modalEditar .modal-card').insertBefore(label, document.getElementById('editPreviews'));
+  }
+  document.getElementById('editNuevaColeccion').checked = !!nueva_coleccion;
+  renderEditPreviews();
+  document.getElementById('modalEditar').style.display = 'flex';
+}
 
-        renderPagination(Math.ceil(arr.length / perPage));
-      }
+function renderEditPreviews(){
+  const cont = document.getElementById('editPreviews');
+  cont.innerHTML = '';
+  const lista = document.getElementById('editImagen').value.split(',').map(s=>s.trim()).filter(Boolean);
+  lista.forEach((url, idx)=>{
+    const t = document.createElement('div'); t.className='thumb';
+    const img = document.createElement('img'); img.src = url;
+    const btn = document.createElement('button'); btn.innerText='×'; btn.title='Eliminar';
+    btn.addEventListener('click', ()=> {
+      removeImageFromInput('editImagen', idx);
+      renderEditPreviews();
+    });
+    t.appendChild(img); t.appendChild(btn); cont.appendChild(t);
+  });
+}
 
-      // PAGINACION
-      function renderPagination(pages){
-        paginacionEl.innerHTML = '';
-        if (!pages || pages <= 1) return;
-        for(let i = 1; i <= pages; i++){
-          const btn = document.createElement('button');
-          btn.innerText = i;
-          if (i === currentPage) btn.style.fontWeight = '700';
-          btn.addEventListener('click', ()=> { currentPage = i; renderProductos(); });
-          paginacionEl.appendChild(btn);
-        }
-      }
+async function guardarEdicion(){
+  const token = sessionStorage.getItem(tokenKey);
+  const producto = {
+    nombre: document.getElementById('editNombre').value.trim(),
+    precio: Number(document.getElementById('editPrecio').value),
+    categoria: document.getElementById('editCategoria').value,
+    stock: Number(document.getElementById('editStock').value),
+    imagen: document.getElementById('editImagen').value.trim(),
+    nueva_coleccion: document.getElementById('editNuevaColeccion') ? document.getElementById('editNuevaColeccion').checked : false
+  };
+  try{
+    const res = await fetch(`/api/productos/${productoEditando}`, { method:'PUT', headers:{ 'Content-Type':'application/json','Authorization':'Bearer '+token }, body: JSON.stringify(producto) });
+    if (!res.ok){
+      alert('Error guardando edición');
+    } else {
+      alert('Guardado');
+      document.getElementById('modalEditar').style.display = 'none';
+      await cargarProductos();
+    }
+  }catch(e){ console.error(e); alert('Error de conexión'); }
+}
 
-      // EVENTOS FILTROS
-      document.getElementById('buscador').addEventListener('input', ()=> { currentPage = 1; renderProductos(); });
-      document.getElementById('filtroCategoria').addEventListener('change', ()=> { currentPage = 1; renderProductos(); });
-      document.getElementById('orden').addEventListener('change', ()=> { renderProductos(); });
+function cerrarModal(){ document.getElementById('modalEditar').style.display = 'none'; }
 
-      // ELIMINAR PRODUCTO
-      async function eliminarProducto(id){
-        if (!confirm('¿Eliminar producto?')) return;
-        const token = sessionStorage.getItem(tokenKey);
-        try{
-          const res = await fetch(`/api/productos/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer '+token }});
-          if (res.status === 204){
-            showMessage('✅ Producto eliminado', 'green', 2500);
-            await cargarProductos();
-          } else {
-            const d = await res.json().catch(()=>({error:'Error'}));
-            showMessage('❌ ' + (d.error || 'No se pudo eliminar'), 'red', 4000);
-          }
-        }catch(e){
-          console.error('eliminarProducto error', e);
-          showMessage('❌ Error de conexión', 'red', 4000);
-        }
-      }
+/* -------------- SUBSCRIBERS -------------- */
+document.getElementById('btnBuscarSub').addEventListener('click', ()=> { subsPage = 0; cargarSuscriptores(document.getElementById('buscarSub').value.trim()); });
+document.getElementById('prevSub').addEventListener('click', ()=> { if (subsPage>0) subsPage--; cargarSuscriptores(document.getElementById('buscarSub').value.trim()); });
+document.getElementById('nextSub').addEventListener('click', ()=> { subsPage++; cargarSuscriptores(document.getElementById('buscarSub').value.trim()); });
+document.getElementById('exportarSub').addEventListener('click', exportarSusCSV);
 
-      // AGREGAR PRODUCTO
-      document.getElementById('formProducto').addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const token = sessionStorage.getItem(tokenKey);
-        const producto = {
-          nombre: (document.getElementById('nombre').value || '').trim(),
-          precio: Number(document.getElementById('precio').value || 0),
-          categoria: document.getElementById('categoria').value || '',
-          stock: Number(document.getElementById('stock').value || 0),
-          imagen: (document.getElementById('imagen').value || '').trim(),
-          nueva_coleccion: !!document.getElementById('nueva_coleccion').checked
-        };
+async function cargarSuscriptores(search = ""){
+  const token = sessionStorage.getItem(tokenKey);
+  try{
+    const res = await fetch(`/api/suscriptores?search=${encodeURIComponent(search)}&limit=${subsLimit}&offset=${subsPage * subsLimit}`, { headers: { 'Authorization': 'Bearer '+token }});
+    if (!res.ok){
+      if (res.status === 401) { alert('Sesión expirada'); sessionStorage.removeItem(tokenKey); location.reload(); return; }
+      console.error('Error', res.status); return;
+    }
+    const data = await res.json();
+    const tbody = document.querySelector('#tabla-suscriptores tbody'); tbody.innerHTML = '';
+    if (!data.length){
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted)">No hay resultados</td></tr>';
+      return;
+    }
+    data.forEach(s=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${s.id}</td><td>${escapeHtml(s.email)}</td><td>${new Date(s.fecha).toLocaleString()}</td><td><button onclick="eliminarSus(${s.id})" style="padding:6px;border-radius:6px;border:none;background:#e74c3c;color:white;cursor:pointer">Eliminar</button></td>`;
+      tbody.appendChild(tr);
+    });
+  }catch(e){ console.error(e); alert('Error cargando suscriptores'); }
+}
 
-        try{
-          const res = await fetch('/api/productos', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+token }, body: JSON.stringify(producto) });
-          if (res.ok){
-            const data = await res.json().catch(()=>null);
-            showMessage('✔ Producto agregado', 'green', 2500);
-            // clean form properly (reset and previews)
-            resetFormProducto();
-            await cargarProductos();
-          } else {
-            const d = await res.json().catch(()=>({error:'Error al agregar'}));
-            showMessage('❌ ' + (d.error || 'Error al agregar'), 'red', 4000);
-          }
-        }catch(err){
-          console.error('agregarProducto error', err);
-          showMessage('❌ Error de conexión', 'red', 4000);
-        }
-      });
+async function eliminarSus(id){
+  if (!confirm('Eliminar suscriptor?')) return;
+  const token = sessionStorage.getItem(tokenKey);
+  try{
+    const res = await fetch(`/api/suscriptores/${id}`, { method:'DELETE', headers:{ 'Authorization': 'Bearer '+token }});
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'No se pudo eliminar'); return; }
+    alert('Eliminado');
+    cargarSuscriptores(document.getElementById('buscarSub').value.trim());
+  }catch(e){ console.error(e); alert('Error al eliminar'); }
+}
 
-      function resetFormProducto(){
-        const form = document.getElementById('formProducto');
-        form.reset();
-        // ensure checkbox is unchecked
-        document.getElementById('nueva_coleccion').checked = false;
-        // clear previews
-        document.getElementById('previews').innerHTML = '';
-        document.getElementById('imagen').value = '';
-        document.getElementById('fileUploader').value = '';
-        document.getElementById('estadoUpload').innerText = 'No has subido nada aún';
-      }
+function exportarSusCSV(){
+  const filas = document.querySelectorAll('#tabla-suscriptores tr');
+  if (!filas.length){ alert('No hay datos'); return; }
+  const csv = Array.from(filas).map(f=> Array.from(f.children).map(td=>`"${td.textContent.replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' }); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='suscriptores_avar.csv'; a.click(); URL.revokeObjectURL(url);
+}
 
-      // Cloudinary upload (one by one)
-      document.getElementById('btnUpload').addEventListener('click', subirImagenCloudinary);
+/* -------------- CONTACTS -------------- */
+document.getElementById('refreshContactos').addEventListener('click', cargarContactos);
+document.getElementById('exportarContactos').addEventListener('click', exportarContactosCSV);
 
-      async function subirImagenCloudinary(){
-        const fileInput = document.getElementById('fileUploader');
-        const estado = document.getElementById('estadoUpload');
-        const campoImagen = document.getElementById('imagen');
-        if (!fileInput.files.length){ estado.innerText = 'Selecciona una imagen'; estado.style.color = 'red'; return; }
-        const file = fileInput.files[0];
-        estado.innerText = 'Subiendo...';
-        estado.style.color = '#b6922e';
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('upload_preset', UPLOAD_PRESET);
-        fd.append('folder', 'productos');
+async function cargarContactos(){
+  const token = sessionStorage.getItem(tokenKey);
+  try{
+    // Intentamos obtener mensajes desde /api/contactos (tu servidor por defecto tenía solo POST /api/contacto)
+    const res = await fetch(`/api/contactos`, { headers: { 'Authorization': 'Bearer '+token }});
+    if (res.status === 404){
+      // si la ruta no existe, informamos al usuario cómo agregarla (server-side)
+      const tbody = document.querySelector('#tabla-contactos tbody'); tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted)">Ruta GET /api/contactos no encontrada en el backend. Agrega una ruta que devuelva los mensajes para verlos aquí.</td></tr>`;
+      return;
+    }
+    if (!res.ok){
+      console.error('Error cargando contactos', res.status);
+      const text = await res.text();
+      document.querySelector('#tabla-contactos tbody').innerHTML = `<tr><td colspan="6" style="color:var(--muted)">No se pudo cargar (status ${res.status}).</td></tr>`;
+      return;
+    }
+    const data = await res.json();
+    const tbody = document.querySelector('#tabla-contactos tbody'); tbody.innerHTML = '';
+    if (!data.length){
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">No hay mensajes</td></tr>'; return;
+    }
+    data.forEach((c,i)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${c.id || i+1}</td><td>${escapeHtml(c.nombre||'')}</td><td>${escapeHtml(c.email||'')}</td><td>${escapeHtml((c.mensaje||'').slice(0,200))}</td><td>${new Date(c.fecha||Date.now()).toLocaleString()}</td><td><button onclick="eliminarContacto(${c.id || 0})" style="padding:6px;border-radius:6px;border:none;background:#e74c3c;color:white;cursor:pointer">Eliminar</button></td>`;
+      tbody.appendChild(tr);
+    });
+  }catch(e){
+    console.error(e);
+    document.querySelector('#tabla-contactos tbody').innerHTML = '<tr><td colspan="6" style="color:var(--muted)">Error de conexión al intentar cargar contactos.</td></tr>';
+  }
+}
 
-        try{
-          const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-          const data = await res.json();
-          if (data && data.secure_url){
-            estado.innerText = 'Subida ✔️';
-            estado.style.color = 'green';
-            campoImagen.value = campoImagen.value.trim() ? campoImagen.value + ', ' + data.secure_url : data.secure_url;
-            campoImagen.dispatchEvent(new Event('input'));
-            fileInput.value = '';
-          } else {
-            estado.innerText = 'Error al subir';
-            estado.style.color = 'red';
-            console.error('Cloudinary error', data);
-          }
-        }catch(e){
-          console.error('subirImagenCloudinary error', e);
-          estado.innerText = 'Error de red';
-          estado.style.color = 'red';
-        }
-      }
+// eliminar contacto placeholder (backend must implement)
+async function eliminarContacto(id){
+  if (!confirm('Eliminar mensaje?')) return;
+  try{
+    const res = await fetch(`/api/contactos/${id}`, { method:'DELETE', headers:{ 'Authorization': 'Bearer '+sessionStorage.getItem(tokenKey) }});
+    if (!res.ok) { alert('No se pudo eliminar. ¿Ruta no implementada?'); return; }
+    alert('Eliminado');
+    cargarContactos();
+  }catch(e){ console.error(e); alert('Error al eliminar'); }
+}
 
-      // PREVIEWS y remover URL individual
-      document.getElementById('imagen').addEventListener('input', ()=> renderPreviewsFromInput('imagen','previews'));
-      function renderPreviewsFromInput(inputId, containerId){
-        const cont = document.getElementById(containerId);
-        cont.innerHTML = '';
-        const lista = (document.getElementById(inputId).value || '').split(',').map(s=>s.trim()).filter(Boolean);
-        lista.forEach((url, idx) => {
-          const t = document.createElement('div'); t.className = 'thumb';
-          const img = document.createElement('img'); img.src = url; img.alt = '';
-          const btn = document.createElement('button'); btn.innerText = '×'; btn.title = 'Eliminar imagen';
-          btn.addEventListener('click', ()=> { removeImageFromInput(inputId, idx); });
-          t.appendChild(img); t.appendChild(btn); cont.appendChild(t);
-        });
-      }
+function exportarContactosCSV(){
+  const filas = document.querySelectorAll('#tabla-contactos tr');
+  if (!filas.length){ alert('No hay datos'); return; }
+  const csv = Array.from(filas).map(f=> Array.from(f.children).map(td=>`"${td.textContent.replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' }); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='contactos_avar.csv'; a.click(); URL.revokeObjectURL(url);
+}
 
-      // EDIT PREVIEWS
-      document.getElementById('editImagen').addEventListener('input', ()=> renderEditPreviews());
-      function renderEditPreviews(){
-        renderPreviewsFromInput('editImagen','editPreviews');
-      }
+/* -------------- Helpers -------------- */
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"'`]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[c])); }
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&#34;'); }
 
-      function removeImageFromInput(inputId, index){
-        const el = document.getElementById(inputId);
-        const arr = (el.value || '').split(',').map(s=>s.trim()).filter(Boolean);
-        arr.splice(index, 1);
-        el.value = arr.join(', ');
-        el.dispatchEvent(new Event('input'));
-      }
+/* -------------- UX small: close modal on background click -------------- */
+document.getElementById('modalEditar').addEventListener('click', (e)=> { if (e.target === document.getElementById('modalEditar')) cerrarModal(); });
 
-      // ABRIR MODAL (seguro) pasando objeto producto
-      function abrirModalSegura(producto){
-        productoEditando = producto.id;
-        document.getElementById('editNombre').value = producto.nombre || '';
-        document.getElementById('editPrecio').value = producto.precio || 0;
-        document.getElementById('editCategoria').value = producto.categoria || '';
-        document.getElementById('editStock').value = producto.stock || 0;
-        document.getElementById('editImagen').value = producto.imagen || '';
-        document.getElementById('editNuevaColeccion').checked = !!producto.nueva_coleccion;
-        renderEditPreviews();
-        openModal();
-      }
+</script>
 
-      function openModal(){
-        const modal = document.getElementById('modalEditar');
-        modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden','false');
-      }
-      function closeModal(){
-        const modal = document.getElementById('modalEditar');
-        modal.style.display = 'none';
-        modal.setAttribute('aria-hidden','true');
-      }
-      document.getElementById('btnCerrarModal').addEventListener('click', closeModal);
-
-      // GUARDAR EDICION
-      document.getElementById('btnGuardarEdit').addEventListener('click', async ()=>{
-        const token = sessionStorage.getItem(tokenKey);
-        const producto = {
-          nombre: (document.getElementById('editNombre').value || '').trim(),
-          precio: Number(document.getElementById('editPrecio').value || 0),
-          categoria: document.getElementById('editCategoria').value || '',
-          stock: Number(document.getElementById('editStock').value || 0),
-          imagen: (document.getElementById('editImagen').value || '').trim(),
-          nueva_coleccion: !!document.getElementById('editNuevaColeccion').checked
-        };
-        try{
-          const res = await fetch(`/api/productos/${productoEditando}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+token }, body: JSON.stringify(producto) });
-          if (res.ok){
-            showMessage('✅ Producto actualizado', 'green', 2500);
-            closeModal();
-            await cargarProductos();
-          } else {
-            const d = await res.json().catch(()=>({error:'Error al actualizar'}));
-            showMessage('❌ ' + (d.error || 'Error al actualizar'), 'red', 4000);
-          }
-        }catch(e){
-          console.error('guardarEdicion error', e);
-          showMessage('❌ Error de conexión', 'red', 4000);
-        }
-      });
-
-      // HELPERS: abrir/close modal clicking outside
-      document.getElementById('modalEditar').addEventListener('click', (e)=>{
-        if (e.target === document.getElementById('modalEditar')) closeModal();
-      });
-
-      // Ensure editPreviews reacts to manual typing
-      document.getElementById('editImagen').addEventListener('input', renderEditPreviews);
-
-      // Keep session only while tab open (sessionStorage already does that)
-      // Extra: when user closes tab, sessionStorage cleared automatically.
-      // Optionally, force logout on beforeunload (commented - not necessary)
-      // window.addEventListener('beforeunload', ()=> sessionStorage.removeItem(tokenKey));
-
-      // Inicial focus accessibility
-      document.addEventListener('keydown', (e)=>{
-        if (e.key === 'Escape') {
-          // close modal if open
-          if (document.getElementById('modalEditar').style.display === 'flex') closeModal();
-        }
-      });
-
-      // Expose one quick function for debugging in console (optional)
-      window.__admin_debug_reload = cargarProductos;
-
-    })();
-  </script>
 </body>
 </html>

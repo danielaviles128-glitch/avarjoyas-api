@@ -70,6 +70,15 @@
     #exportar:hover {
       background-color: #b6913e;
     }
+
+    .btn-del {
+      background:#e74c3c;
+      color:white;
+      border:none;
+      padding:6px 10px;
+      border-radius:6px;
+      cursor:pointer;
+    }
   </style>
 </head>
 <body>
@@ -104,23 +113,69 @@
 </main>
 
 <script>
-  // === CONFIGURACIÓN GENERAL ===
-  const API_BASE = "https://avarjoyas-api.onrender.com"; // 🔹 API base global
+  // ===============================
+  // CONFIG GLOBAL
+  // ===============================
+  const API_BASE = "/";
   let pagina = 0;
-  const limite = 20; // registros por página
+  const limite = 20;
 
-  // === Cargar lista de suscriptores ===
+  function getToken(){
+    return sessionStorage.getItem("avar_token");
+  }
+
+  async function checkAuth(){
+    const token = getToken();
+    if (!token) {
+      alert("Debes iniciar sesión en el panel de administración.");
+      window.location.href = "/admin.html";
+      return false;
+    }
+
+    try{
+      const res = await fetch("/api/auth-check", {
+        headers: { "Authorization": "Bearer " + token }
+      });
+
+      if (!res.ok){
+        alert("Sesión expirada. Inicia sesión nuevamente.");
+        window.location.href = "/admin.html";
+        return false;
+      }
+
+      return true;
+    }catch(e){
+      console.error(e);
+      alert("Error comprobando sesión");
+      return false;
+    }
+  }
+
+  // ===============================
+  // Cargar suscriptores
+  // ===============================
   async function cargarSuscriptores(search = "") {
+    const token = getToken();
+
     try {
       const res = await fetch(
-        `${API_BASE}/api/suscriptores?search=${encodeURIComponent(search)}&limit=${limite}&offset=${pagina * limite}`
+        `/api/suscriptores?search=${encodeURIComponent(search)}&limit=${limite}&offset=${pagina * limite}`,
+        {
+          headers: { "Authorization": "Bearer " + token }
+        }
       );
+
+      if (!res.ok){
+        console.error("Fallo al traer suscriptores");
+        return;
+      }
+
       const data = await res.json();
 
       const tbody = document.querySelector("#tabla-suscriptores tbody");
       tbody.innerHTML = "";
 
-      if (data.length === 0) {
+      if (!data.length) {
         tbody.innerHTML = `
           <tr>
             <td colspan="4" style="text-align:center; color:#777;">No se encontraron resultados</td>
@@ -128,52 +183,59 @@
         return;
       }
 
-      // Renderizar los datos en tabla
       data.forEach(sub => {
         const fila = document.createElement("tr");
         fila.innerHTML = `
           <td>${sub.id}</td>
           <td>${sub.email}</td>
           <td>${new Date(sub.fecha).toLocaleString()}</td>
-          <td>
-            <button onclick="eliminarSuscriptor(${sub.id})"
-              style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">
-              🗑️ Eliminar
-            </button>
-          </td>
+          <td><button class="btn-del" data-id="${sub.id}">🗑️ Eliminar</button></td>
         `;
         tbody.appendChild(fila);
       });
+
+      document.querySelectorAll(".btn-del").forEach(btn=>{
+        btn.addEventListener("click", ()=> eliminarSuscriptor(btn.dataset.id));
+      });
+
     } catch (err) {
       console.error("Error al cargar suscriptores:", err);
     }
   }
 
-  // === Eliminar suscriptor ===
+  // ===============================
+  // Eliminar suscriptor
+  // ===============================
   async function eliminarSuscriptor(id) {
     if (!confirm("¿Seguro que deseas eliminar este suscriptor?")) return;
 
-    try {
-      const res = await fetch(`${API_BASE}/api/suscriptores/${id}`, {
+    const token = getToken();
+
+    try{
+      const res = await fetch(`/api/suscriptores/${id}`, {
         method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        alert(data.error || "❌ No se pudo eliminar el suscriptor");
+      if (!res.ok){
+        alert(data.error || "No se pudo eliminar");
         return;
       }
 
-      alert(data.message || "✅ Suscriptor eliminado correctamente");
-      cargarSuscriptores(); // 🔁 recarga la tabla
-    } catch (err) {
-      console.error("Error al eliminar suscriptor:", err);
-      alert("❌ Error al eliminar suscriptor");
+      alert("Eliminado correctamente");
+      cargarSuscriptores();
+
+    }catch(e){
+      console.error("Error:", e);
+      alert("Error al eliminar suscriptor");
     }
   }
 
-  // === Exportar a CSV ===
+  // ===============================
+  // Exportar CSV
+  // ===============================
   function exportarCSV() {
     const filas = document.querySelectorAll("#tabla-suscriptores tr");
     const csv = Array.from(filas)
@@ -193,37 +255,33 @@
     URL.revokeObjectURL(url);
   }
 
-  // === Navegación (paginación) ===
+  // ===============================
+  // Eventos
+  // ===============================
+
   document.getElementById("siguiente").addEventListener("click", () => {
     pagina++;
-    const valor = document.getElementById("buscar").value.trim();
-    cargarSuscriptores(valor);
+    cargarSuscriptores(document.getElementById("buscar").value.trim());
   });
 
   document.getElementById("anterior").addEventListener("click", () => {
     if (pagina > 0) pagina--;
-    const valor = document.getElementById("buscar").value.trim();
-    cargarSuscriptores(valor);
+    cargarSuscriptores(document.getElementById("buscar").value.trim());
   });
 
-  // === Buscar ===
   document.getElementById("btnBuscar").addEventListener("click", () => {
     pagina = 0;
-    const valor = document.getElementById("buscar").value.trim();
-    cargarSuscriptores(valor);
+    cargarSuscriptores(document.getElementById("buscar").value.trim());
   });
 
-  // === Exportar ===
   document.getElementById("exportar").addEventListener("click", exportarCSV);
 
-  // === Acceso protegido ===
-  const clave = prompt("Ingrese la clave de administrador:");
-  if (clave !== "Avar2025!") {
-    alert("Acceso denegado");
-    window.location.href = "/";
-  } else {
-    document.addEventListener("DOMContentLoaded", () => cargarSuscriptores());
-  }
+  // ===============================
+  // INIT: requiere login
+  // ===============================
+  checkAuth().then(ok=>{
+    if (ok) cargarSuscriptores();
+  });
 </script>
 
 </body>
