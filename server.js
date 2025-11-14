@@ -244,7 +244,45 @@ app.get("/api/test", async (req, res) => {
 
 // === 📬 Ruta de contacto usando RESEND ===
 const { Resend } = require("resend");
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Validamos que exista API KEY
+if (!process.env.RESEND_API_KEY) {
+  console.error("❌ ERROR: Falta RESEND_API_KEY en variables de entorno.");
+}
+
+const resend = new Resend(process.env.RESEND_API_KEY || "");
+
+app.post("/api/contacto", async (req, res) => {
+  const { nombre, email, mensaje } = req.body;
+
+  if (!nombre || !email || !mensaje) {
+    return res.status(400).json({ error: "Todos los campos son obligatorios." });
+  }
+
+  try {
+    const resultado = await resend.emails.send({
+      from: "AVAR Joyas 💎 <onboarding@resend.dev>",
+      to: "avarjoyas@gmail.com",
+      subject: "💌 Nuevo mensaje desde el formulario de contacto",
+      html: `
+        <h3>Nuevo mensaje de contacto</h3>
+        <p><strong>Nombre:</strong> ${nombre}</p>
+        <p><strong>Correo:</strong> ${email}</p>
+        <p><strong>Mensaje:</strong></p>
+        <p>${mensaje}</p>
+      `,
+    });
+
+    console.log("📩 RESEND RESPONSE:", resultado);
+    res.status(200).json({ success: "Mensaje enviado correctamente ✅" });
+  } catch (error) {
+    console.error("❌ Error al enviar mensaje con Resend:", error);
+    res.status(500).json({
+      error: "No se pudo enviar el mensaje. Intenta más tarde.",
+      detalle: error.message
+    });
+  }
+});
 
 app.post("/api/contacto", async (req, res) => {
   const { nombre, email, mensaje } = req.body;
