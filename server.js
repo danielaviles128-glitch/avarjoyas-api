@@ -1,11 +1,14 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
-require("dotenv").config();
-const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { Resend } = require("resend");
+const nodemailer = require("nodemailer"); // si lo usas para algo más, si no, lo quitamos
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -242,16 +245,6 @@ app.get("/api/test", async (req, res) => {
   }
 });
 
-// === 📬 Ruta de contacto usando RESEND ===
-const { Resend } = require("resend");
-
-// Validamos que exista API KEY
-if (!process.env.RESEND_API_KEY) {
-  console.error("❌ ERROR: Falta RESEND_API_KEY en variables de entorno.");
-}
-
-const resend = new Resend(process.env.RESEND_API_KEY || "");
-
 app.post("/api/contacto", async (req, res) => {
   const { nombre, email, mensaje } = req.body;
 
@@ -279,38 +272,9 @@ app.post("/api/contacto", async (req, res) => {
     console.error("❌ Error al enviar mensaje con Resend:", error);
     res.status(500).json({
       error: "No se pudo enviar el mensaje. Intenta más tarde.",
-      detalle: error.message
+      detalle: error.message,
     });
   }
 });
-
-app.post("/api/contacto", async (req, res) => {
-  const { nombre, email, mensaje } = req.body;
-
-  if (!nombre || !email || !mensaje) {
-    return res.status(400).json({ error: "Todos los campos son obligatorios." });
-  }
-
-  try {
-    await resend.emails.send({
-      from: "AVAR Joyas 💎 <onboarding@resend.dev>",
-      to: "avarjoyas@gmail.com", // aquí pones tu correo donde quieres recibir los mensajes
-      subject: "💌 Nuevo mensaje desde el formulario de contacto",
-      html: `
-        <h3>Nuevo mensaje de contacto</h3>
-        <p><strong>Nombre:</strong> ${nombre}</p>
-        <p><strong>Correo:</strong> ${email}</p>
-        <p><strong>Mensaje:</strong></p>
-        <p>${mensaje}</p>
-      `,
-    });
-
-    res.status(200).json({ success: "Mensaje enviado correctamente ✅" });
-  } catch (error) {
-    console.error("❌ Error al enviar el mensaje:", error);
-    res.status(500).json({ error: "Error al enviar el mensaje. Intenta de nuevo más tarde." });
-  }
-});
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`));
