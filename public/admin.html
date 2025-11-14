@@ -452,7 +452,19 @@ function renderProductos(){
       </div>
       <small style="display:block; margin-top:8px; color:var(--muted); word-break:break-all">${escapeHtml(p.imagen||'')}</small>
       <div class="producto-actions">
-        <button onclick="abrirModal(${p.id}, ${JSON.stringify(p.nombre)}, ${p.precio}, ${JSON.stringify(p.categoria)}, ${p.stock}, ${JSON.stringify(p.imagen)}, ${p.nueva_coleccion})" style="padding:8px;border-radius:8px;border:1px solid #ddd;background:white;cursor:pointer">Editar</button>
+        <button 
+  class="btn-editar"
+  data-id="${p.id}"
+  data-nombre="${escapeAttr(p.nombre)}"
+  data-precio="${p.precio}"
+  data-categoria="${escapeAttr(p.categoria)}"
+  data-stock="${p.stock}"
+  data-imagen="${escapeAttr(p.imagen)}"
+  data-nueva="${p.nueva_coleccion}"
+  style="padding:8px;border-radius:8px;border:1px solid #ddd;background:white;cursor:pointer"
+>
+  Editar
+</button>
         <button onclick="eliminarProducto(${p.id})" style="padding:8px;border-radius:8px;border:none;background:#ffecec;cursor:pointer">Eliminar</button>
       </div>
     `;
@@ -738,6 +750,22 @@ function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&#34;'); }
 
 /* -------------- UX small: close modal on background click -------------- */
 document.getElementById('modalEditar').addEventListener('click', (e)=> { if (e.target === document.getElementById('modalEditar')) cerrarModal(); });
+
+document.addEventListener("click", e => {
+  if (!e.target.classList.contains("btn-editar")) return;
+
+  const btn = e.target;
+
+  abrirModal(
+    btn.dataset.id,
+    btn.dataset.nombre,
+    btn.dataset.precio,
+    btn.dataset.categoria,
+    btn.dataset.stock,
+    btn.dataset.imagen,
+    btn.dataset.nueva === "true"
+  );
+});
 
 </script>
 
