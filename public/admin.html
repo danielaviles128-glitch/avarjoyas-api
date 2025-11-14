@@ -5,63 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel de administración - AVAR Joyas</title>
   <style>
-    :root{
-      --gold:#b6922e;
-      --gold-dark:#a38025;
-      --muted:#777;
-      --card:#fff;
-      --bg:#f6f6f6;
-      --maxw:980px;
-    }
+    :root{--gold:#b6922e;--muted:#777;--card:#fff;--bg:#f6f6f6;--maxw:980px}
     *{box-sizing:border-box}
-    body { font-family: Inter, Arial, system-ui, -apple-system; background: var(--bg); margin: 0; padding: 28px; color: #222; display:flex; justify-content:center; }
-    .container{width:100%; max-width:var(--maxw);} 
-    header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px}
-    h1 { margin:0; color:var(--gold); font-size:20px }
-    .top-actions{display:flex; gap:10px; align-items:center}
-
-    /* Form */
-    .card{background:var(--card); padding:18px; border-radius:12px; box-shadow:0 6px 24px rgba(20,20,20,0.06);}
-    form{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start}
+    body{font-family:Inter,Arial,system-ui,-apple-system;background:var(--bg);margin:0;padding:28px;color:#222;display:flex;justify-content:center}
+    .container{width:100%;max-width:var(--maxw)}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    h1{margin:0;color:var(--gold);font-size:20px}
+    .top-actions{display:flex;gap:10px;align-items:center}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 6px 24px rgba(20,20,20,0.06)}
+    form{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
     form .full{grid-column:1/3}
-    label{font-size:13px; color:#333; display:block; margin-bottom:6px}
-    input[type=text], input[type=number], select{width:100%; padding:10px; border-radius:8px; border:1px solid #ddd}
-    button.primary{background:var(--gold); color:#fff; padding:10px 14px; border-radius:8px; border:none; cursor:pointer}
-    button.ghost{background:#fff; border:1px solid #ddd; padding:8px 10px; border-radius:8px; cursor:pointer}
-
-    /* Upload row */
-    .upload-row{display:flex; gap:10px; align-items:center}
+    label{font-size:13px;color:#333;display:block;margin-bottom:6px}
+    input[type=text],input[type=number],select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd}
+    button.primary{background:var(--gold);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+    button.ghost{background:#fff;border:1px solid #ddd;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .upload-row{display:flex;gap:10px;align-items:center}
     .upload-row input[type=file]{flex:1}
-    #estadoUpload{margin:0; font-size:13px; color:var(--muted)}
-
-    /* Previews */
-    #previews, #editPreviews{display:flex; gap:8px; flex-wrap:wrap}
-    .thumb{width:80px; height:80px; border-radius:8px; overflow:hidden; position:relative; border:1px solid #e6e6e6}
-    .thumb img{width:100%; height:100%; object-fit:cover}
-    .thumb button{position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer}
-
-    /* Productos list */
-    .controls{display:flex; gap:10px; align-items:center; margin:16px 0}
-    .controls input{padding:10px; border-radius:8px; border:1px solid #ddd}
-    .grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:12px}
-    .producto-card{padding:12px; border-radius:10px; background:var(--card); box-shadow:0 3px 12px rgba(10,10,10,0.04)}
+    #estadoUpload{margin:0;font-size:13px;color:var(--muted)}
+    #previews,#editPreviews{display:flex;gap:8px;flex-wrap:wrap}
+    .thumb{width:80px;height:80px;border-radius:8px;overflow:hidden;position:relative;border:1px solid #e6e6e6}
+    .thumb img{width:100%;height:100%;object-fit:cover}
+    .thumb button{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer}
+    .controls{display:flex;gap:10px;align-items:center;margin:16px 0}
+    .controls input{padding:10px;border-radius:8px;border:1px solid #ddd}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .producto-card{padding:12px;border-radius:10px;background:var(--card);box-shadow:0 3px 12px rgba(10,10,10,0.04)}
     .producto-card h4{margin:0 0 6px 0}
-    .producto-card small{display:block; color:var(--muted); word-break:break-all; font-size:12px}
-    .producto-actions{display:flex; gap:8px; margin-top:10px}
-
-    /* Pagination */
-    .pagination{display:flex; gap:6px; align-items:center; justify-content:center; margin-top:12px}
-    .pagination button{padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer}
-
-    /* Modal */
-    #modalEditar{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;}
-    #modalEditar .modal-card{width:100%; max-width:560px}
-
-    /* Login */
-    #loginOverlay{position:fixed; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0.4)); display:flex; align-items:center; justify-content:center; z-index:9999}
-    #loginBox{width:100%; max-width:420px}
-
-    @media (max-width:720px){ form{grid-template-columns:1fr} .grid{grid-template-columns:1fr} }
+    .producto-card small{display:block;color:var(--muted);word-break:break-all;font-size:12px}
+    .producto-actions{display:flex;gap:8px;margin-top:10px}
+    .pagination{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:12px}
+    .pagination button{padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer}
+    #modalEditar{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center}
+    #modalEditar .modal-card{width:100%;max-width:560px}
+    #loginOverlay{position:fixed;inset:0;background:linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0.4));display:flex;align-items:center;justify-content:center;z-index:9999}
+    #loginBox{width:100%;max-width:420px}
+    @media(max-width:720px){form{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -69,12 +47,11 @@
     <header>
       <h1>Panel de Administración — AVAR Joyas</h1>
       <div class="top-actions">
-        <div id="usuarioBadge" style="font-size:13px; color:var(--muted)"></div>
+        <div id="usuarioBadge" style="font-size:13px;color:var(--muted)"></div>
         <button id="logoutBtn" class="ghost" style="display:none">Cerrar sesión</button>
       </div>
     </header>
 
-    <!-- AGREGAR PRODUCTO -->
     <section class="card">
       <form id="formProducto">
         <div>
@@ -115,19 +92,19 @@
           <p id="estadoUpload">No has subido nada aún</p>
         </div>
 
-        <div class="full" style="display:flex; align-items:center; gap:12px">
-          <div style="display:flex; align-items:center; gap:8px">
-            <input type="checkbox" id="nueva_coleccion" style="width:18px; height:18px;" />
+        <div class="full" style="display:flex;align-items:center;gap:12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="nueva_coleccion" style="width:18px;height:18px;" />
             <label for="nueva_coleccion">¿Pertenece a la nueva colección?</label>
           </div>
-          <div style="margin-left:auto; width:220px;">
+          <div style="margin-left:auto;width:220px;">
             <button type="submit" class="primary">Agregar producto</button>
           </div>
         </div>
 
         <div class="full">
           <div id="previewContainer">
-            <p style="margin:6px 0; color:var(--muted)">Vista previa</p>
+            <p style="margin:6px 0;color:var(--muted)">Vista previa</p>
             <div id="previews"></div>
           </div>
         </div>
@@ -136,7 +113,6 @@
 
     <div style="height:14px"></div>
 
-    <!-- FILTROS / BUSCADOR -->
     <section class="card" style="margin-top:10px">
       <div class="controls">
         <input id="buscador" placeholder="Buscar por nombre..." />
@@ -153,7 +129,7 @@
           <option value="price-asc">Precio: menor a mayor</option>
           <option value="price-desc">Precio: mayor a menor</option>
         </select>
-        <div style="margin-left:auto; font-size:13px; color:var(--muted)"><span id="totalCount">0</span> productos</div>
+        <div style="margin-left:auto;font-size:13px;color:var(--muted)"><span id="totalCount">0</span> productos</div>
       </div>
 
       <div id="productosGrid" class="grid"></div>
@@ -161,10 +137,9 @@
     </section>
 
     <div style="height:20px"></div>
-    <div id="mensaje" style="text-align:center; color:green"></div>
+    <div id="mensaje" style="text-align:center;color:green"></div>
   </div>
 
-  <!-- MODAL EDITAR -->
   <div id="modalEditar">
     <div class="modal-card card" style="padding:18px;">
       <h3>Editar producto</h3>
@@ -187,14 +162,13 @@
 
       <div id="editPreviews" style="margin:10px 0"></div>
 
-      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
         <button onclick="guardarEdicion()" class="primary">Guardar</button>
         <button onclick="cerrarModal()" class="ghost">Cancelar</button>
       </div>
     </div>
   </div>
 
-  <!-- LOGIN OVERLAY (usa autenticación server-side) -->
   <div id="loginOverlay">
     <div id="loginBox" class="card">
       <h3 style="margin-top:0">Iniciar sesión</h3>
@@ -202,39 +176,39 @@
       <input id="loginUser" />
       <label>Contraseña</label>
       <input id="loginPass" type="password" />
-      <div style="display:flex; gap:8px; margin-top:10px">
+      <div style="display:flex;gap:8px;margin-top:10px">
         <button id="loginBtn" class="primary">Entrar</button>
         <div style="flex:1"></div>
       </div>
-      <p id="loginMsg" style="color:red; margin-top:8px"></p>
+      <p id="loginMsg" style="color:red;margin-top:8px"></p>
     </div>
   </div>
 
   <script>
-    /* -------- CONFIG -------- */
-    const API_URL = "https://avarjoyas-api.onrender.com";
-    const CLOUD_NAME = "dt2qovj9c"; // tu cloud name
-    const UPLOAD_PRESET = "ml_default"; // tu unsigned preset
+    // CONFIG
+    const API_URL = "/"; // since admin is served from backend's /public, relative paths work
+    const CLOUD_NAME = "dt2qovj9c";
+    const UPLOAD_PRESET = "ml_default";
 
-    /* -------- Estado global (cliente) -------- */
+    // Estado
     let productos = [];
     let currentPage = 1;
     const perPage = 6;
-
-    /* -------- Autenticación -------- */
     const tokenKey = "avar_token";
+    let productoEditando = null;
 
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.removeItem(tokenKey);
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", ()=>{
+      sessionStorage.removeItem(tokenKey);
       location.reload();
     });
 
-    async function checkAuth() {
-      const token = localStorage.getItem(tokenKey);
+    // Check auth - uses sessionStorage
+    async function checkAuth(){
+      const token = sessionStorage.getItem(tokenKey);
       if (!token) return false;
-      // opcional: podrías verificar token con backend
       try{
-        const res = await fetch(`${API_URL}/api/auth-check`, {headers:{'Authorization': 'Bearer '+token}});
+        const res = await fetch('/api/auth-check', {headers:{'Authorization':'Bearer '+token}});
         if (res.ok){
           const info = await res.json();
           document.getElementById('usuarioBadge').innerText = info.user || 'admin';
@@ -246,40 +220,40 @@
       return false;
     }
 
+    // Login handler
     document.getElementById('loginBtn').addEventListener('click', async ()=>{
       const u = document.getElementById('loginUser').value.trim();
       const p = document.getElementById('loginPass').value.trim();
       document.getElementById('loginMsg').innerText='';
       try{
-        const res = await fetch(`${API_URL}/api/login`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user:u,password:p})});
-        if (!res.ok) {
-          const err = await res.json();
-          document.getElementById('loginMsg').innerText = err.error || 'Credenciales inválidas';
-          return;
+        const res = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:u,password:p})});
+        if (!res.ok){
+          const err = await res.json(); document.getElementById('loginMsg').innerText = err.error || 'Credenciales inválidas'; return;
         }
         const data = await res.json();
-        localStorage.setItem(tokenKey, data.token);
+        sessionStorage.setItem(tokenKey, data.token);
         await initApp();
       }catch(e){document.getElementById('loginMsg').innerText='Error de conexión'}
     });
 
-    /* -------- Inicia la app solo si autenticado -------- */
+    // Inicializar app si autenticado
     async function initApp(){
       const ok = await checkAuth();
-      if (!ok) return;
-      cargarProductos();
+      if (!ok) return; cargarProductos();
     }
 
+    // Llamar init
     initApp();
 
-    /* -------- FUNCIONES DE PRODUCTOS (frontend) -------- */
+    // Cargar productos (GET público)
     async function cargarProductos(){
-      const res = await fetch(`${API_URL}/api/productos`);
-      productos = await res.json();
-      currentPage = 1;
-      renderProductos();
+      try{
+        const res = await fetch('/api/productos');
+        productos = await res.json(); currentPage = 1; renderProductos();
+      }catch(e){console.error(e);}
     }
 
+    // Filtrado y orden
     function getFiltered(){
       const q = document.getElementById('buscador').value.toLowerCase();
       const cat = document.getElementById('filtroCategoria').value;
@@ -295,20 +269,15 @@
     function renderProductos(){
       const lista = document.getElementById('productosGrid');
       const arr = getFiltered();
-      const total = arr.length;
-      document.getElementById('totalCount').innerText = total;
-
-      const start = (currentPage-1)*perPage;
-      const pageItems = arr.slice(start, start+perPage);
-
-      lista.innerHTML = '';
+      const total = arr.length; document.getElementById('totalCount').innerText = total;
+      const start = (currentPage-1)*perPage; const pageItems = arr.slice(start,start+perPage);
+      lista.innerHTML='';
       pageItems.forEach(p=>{
-        const div = document.createElement('div');
-        div.className = 'producto-card';
+        const div = document.createElement('div'); div.className='producto-card';
         div.innerHTML = `
           <h4>${escapeHtml(p.nombre)} ${p.nueva_coleccion?'<span style="color:var(--gold)">✨</span>':''}</h4>
-          <div style="display:flex; gap:10px; align-items:center">
-            <img src="${escapeAttr((p.imagen||'').split(',')[0]||'')}" alt="" style="width:80px; height:80px; object-fit:cover; border-radius:8px;" onerror="this.style.display='none'" />
+          <div style="display:flex;gap:10px;align-items:center">
+            <img src="${escapeAttr((p.imagen||'').split(',')[0]||'')}" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:8px;" onerror="this.style.display='none'" />
             <div style="flex:1">
               <div>$${Number(p.precio).toLocaleString('es-ES')}</div>
               <div style="color:var(--muted)">${escapeHtml(p.categoria)}</div>
@@ -317,43 +286,28 @@
           <small>${escapeHtml(p.imagen||'')}</small>
           <div class="producto-actions">
             <button class="ghost" onclick="abrirModal(${p.id}, ${JSON.stringify(p.nombre)}, ${p.precio}, ${JSON.stringify(p.categoria)}, ${p.stock}, ${JSON.stringify(p.imagen)}, ${p.nueva_coleccion})">Editar</button>
-            <button class="ghost" style="background:#ffecec; border:1px solid #f5c2c2" onclick="eliminarProducto(${p.id})">Eliminar</button>
+            <button class="ghost" style="background:#ffecec;border:1px solid #f5c2c2" onclick="eliminarProducto(${p.id})">Eliminar</button>
           </div>
         `;
         lista.appendChild(div);
       });
-
       renderPagination(Math.ceil(total/perPage));
     }
 
     function renderPagination(pages){
-      const cont = document.getElementById('paginacion');
-      cont.innerHTML = '';
-      if (pages<=1) return;
-      for(let i=1;i<=pages;i++){
-        const btn = document.createElement('button');
-        btn.innerText = i;
-        if (i===currentPage) btn.style.fontWeight='700';
-        btn.addEventListener('click', ()=>{currentPage=i; renderProductos();});
-        cont.appendChild(btn);
-      }
-    }
+      const cont = document.getElementById('paginacion'); cont.innerHTML=''; if (pages<=1) return; for(let i=1;i<=pages;i++){ const btn=document.createElement('button'); btn.innerText=i; if(i===currentPage) btn.style.fontWeight='700'; btn.addEventListener('click',()=>{currentPage=i; renderProductos();}); cont.appendChild(btn);} }
 
-    document.getElementById('buscador').addEventListener('input', ()=>{ currentPage=1; renderProductos(); });
-    document.getElementById('filtroCategoria').addEventListener('change', ()=>{ currentPage=1; renderProductos(); });
-    document.getElementById('orden').addEventListener('change', ()=>{ renderProductos(); });
+    document.getElementById('buscador').addEventListener('input',()=>{currentPage=1; renderProductos();});
+    document.getElementById('filtroCategoria').addEventListener('change',()=>{currentPage=1; renderProductos();});
+    document.getElementById('orden').addEventListener('change',()=>{renderProductos();});
 
-    async function eliminarProducto(id){
-      if (!confirm('¿Eliminar producto?')) return;
-      const token = localStorage.getItem(tokenKey);
-      await fetch(`${API_URL}/api/productos/${id}`, {method:'DELETE', headers:{'Authorization':'Bearer '+token}});
-      cargarProductos();
-    }
+    // Eliminar producto (auth required)
+    async function eliminarProducto(id){ if(!confirm('¿Eliminar producto?')) return; const token=sessionStorage.getItem(tokenKey); await fetch(`/api/productos/${id}`,{method:'DELETE',headers:{'Authorization':'Bearer '+token}}); cargarProductos(); }
 
-    /* -------- AGREGAR PRODUCTO -------- */
-    form.addEventListener('submit', async (e)=>{
+    // AGREGAR PRODUCTO -> use formProducto listener (fixed)
+    document.getElementById('formProducto').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      const token = localStorage.getItem(tokenKey);
+      const token = sessionStorage.getItem(tokenKey);
       const producto = {
         nombre: document.getElementById('nombre').value.trim(),
         precio: Number(document.getElementById('precio').value),
@@ -362,103 +316,59 @@
         imagen: document.getElementById('imagen').value.trim(),
         nueva_coleccion: document.getElementById('nueva_coleccion').checked
       };
-      const res = await fetch(`${API_URL}/api/productos`, {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify(producto)});
-      if (res.ok){ document.getElementById('mensaje').innerText='✔ Producto agregado'; form.reset(); document.getElementById('previews').innerHTML=''; cargarProductos(); }
-      else{ document.getElementById('mensaje').innerText='❌ Error al agregar' }
-    });
 
-    /* -------- SUBIDA A CLOUDINARY (1 por vez, opción B) -------- */
-    async function subirImagenCloudinary(){
-      const fileInput = document.getElementById('fileUploader');
-      const estado = document.getElementById('estadoUpload');
-      const campoImagen = document.getElementById('imagen');
-      if (!fileInput.files.length){ estado.innerText='Selecciona una imagen'; estado.style.color='red'; return; }
-      const file = fileInput.files[0];
-      estado.innerText='Subiendo...'; estado.style.color='#b6922e';
-      const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', UPLOAD_PRESET); fd.append('folder','productos');
       try{
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST', body:fd});
-        const data = await res.json();
-        if (data.secure_url){
-          estado.innerText='Subida ✔️'; estado.style.color='green';
-          if (campoImagen.value.trim()!=='') campoImagen.value += ', ' + data.secure_url; else campoImagen.value = data.secure_url;
-          campoImagen.dispatchEvent(new Event('input'));
-          fileInput.value = '';
-        } else { estado.innerText='Error al subir'; estado.style.color='red'; }
-      }catch(e){ console.error(e); estado.innerText='Error de red'; estado.style.color='red'; }
-    }
+        const res = await fetch('/api/productos',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(producto)});
+        if (res.ok){
+          document.getElementById('mensaje').innerText='✔ Producto agregado';
+          // limpiar formulario y previews
+          document.getElementById('formProducto').reset();
+          document.getElementById('previews').innerHTML='';
+          // recargar lista
+          await cargarProductos();
+        } else {
+          const data = await res.json();
+          document.getElementById('mensaje').innerText = '❌ ' + (data.error || 'Error al agregar');
+        }
+      }catch(err){console.error(err); document.getElementById('mensaje').innerText='❌ Error de conexión';}
 
-    /* -------- PREVIEW + eliminar URL individual (add) -------- */
-    document.getElementById('imagen').addEventListener('input', ()=>{
-      const cont = document.getElementById('previews'); cont.innerHTML='';
-      const lista = document.getElementById('imagen').value.split(',').map(s=>s.trim()).filter(Boolean);
-      lista.forEach((url, idx)=>{
-        const t = document.createElement('div'); t.className='thumb';
-        const img = document.createElement('img'); img.src = url; img.alt='';
-        const btn = document.createElement('button'); btn.innerText='×';
-        btn.title='Eliminar imagen';
-        btn.addEventListener('click', ()=>{ removeImageFromInput('imagen', idx); });
-        t.appendChild(img); t.appendChild(btn); cont.appendChild(t);
-      });
+      // limpiar mensaje después de 3s
+      setTimeout(()=>{document.getElementById('mensaje').innerText='';},3000);
     });
 
-    /* -------- PREVIEW + eliminar URL individual (edit modal) -------- */
+    // Cloudinary upload (one by one)
+    async function subirImagenCloudinary(){
+      const fileInput=document.getElementById('fileUploader'); const estado=document.getElementById('estadoUpload'); const campoImagen=document.getElementById('imagen');
+      if(!fileInput.files.length){estado.innerText='Selecciona una imagen'; estado.style.color='red'; return}
+      const file=fileInput.files[0]; estado.innerText='Subiendo...'; estado.style.color='#b6922e';
+      const fd=new FormData(); fd.append('file',file); fd.append('upload_preset',UPLOAD_PRESET); fd.append('folder','productos');
+      try{
+        const res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{method:'POST',body:fd});
+        const data=await res.json(); if(data.secure_url){ estado.innerText='Subida ✔️'; estado.style.color='green'; campoImagen.value = campoImagen.value.trim() ? campoImagen.value + ', ' + data.secure_url : data.secure_url; campoImagen.dispatchEvent(new Event('input')); fileInput.value=''; } else { estado.innerText='Error al subir'; estado.style.color='red'; }
+      }catch(e){console.error(e); estado.innerText='Error de red'; estado.style.color='red'; }
+    }
+
+    // Previews and remove single image
+    document.getElementById('imagen').addEventListener('input', ()=>{
+      const cont=document.getElementById('previews'); cont.innerHTML=''; const lista=document.getElementById('imagen').value.split(',').map(s=>s.trim()).filter(Boolean);
+      lista.forEach((url,idx)=>{ const t=document.createElement('div'); t.className='thumb'; const img=document.createElement('img'); img.src=url; img.alt=''; const btn=document.createElement('button'); btn.innerText='×'; btn.title='Eliminar imagen'; btn.addEventListener('click',()=>{ removeImageFromInput('imagen',idx); }); t.appendChild(img); t.appendChild(btn); cont.appendChild(t); });
+    });
+
     document.getElementById('editImagen').addEventListener('input', ()=>{ renderEditPreviews(); });
-    function renderEditPreviews(){
-      const cont = document.getElementById('editPreviews'); cont.innerHTML='';
-      const lista = document.getElementById('editImagen').value.split(',').map(s=>s.trim()).filter(Boolean);
-      lista.forEach((url, idx)=>{
-        const t = document.createElement('div'); t.className='thumb';
-        const img = document.createElement('img'); img.src = url; img.alt='';
-        const btn = document.createElement('button'); btn.innerText='×';
-        btn.title='Eliminar imagen';
-        btn.addEventListener('click', ()=>{ removeImageFromInput('editImagen', idx); });
-        t.appendChild(img); t.appendChild(btn); cont.appendChild(t);
-      });
-    }
+    function renderEditPreviews(){ const cont=document.getElementById('editPreviews'); cont.innerHTML=''; const lista=document.getElementById('editImagen').value.split(',').map(s=>s.trim()).filter(Boolean); lista.forEach((url,idx)=>{ const t=document.createElement('div'); t.className='thumb'; const img=document.createElement('img'); img.src=url; img.alt=''; const btn=document.createElement('button'); btn.innerText='×'; btn.title='Eliminar imagen'; btn.addEventListener('click',()=>{ removeImageFromInput('editImagen',idx); }); t.appendChild(img); t.appendChild(btn); cont.appendChild(t); }); }
 
-    function removeImageFromInput(inputId, index){
-      const el = document.getElementById(inputId);
-      const arr = el.value.split(',').map(s=>s.trim()).filter(Boolean);
-      arr.splice(index,1);
-      el.value = arr.join(', ');
-      el.dispatchEvent(new Event('input'));
-    }
+    function removeImageFromInput(inputId,index){ const el=document.getElementById(inputId); const arr=el.value.split(',').map(s=>s.trim()).filter(Boolean); arr.splice(index,1); el.value=arr.join(', '); el.dispatchEvent(new Event('input')); }
 
-    /* -------- EDITAR -------- */
-    function abrirModal(id, nombre, precio, categoria, stock, imagen, nueva_coleccion){
-      productoEditando = id;
-      document.getElementById('editNombre').value = nombre || '';
-      document.getElementById('editPrecio').value = precio || 0;
-      document.getElementById('editCategoria').value = categoria || '';
-      document.getElementById('editStock').value = stock || 0;
-      document.getElementById('editImagen').value = imagen || '';
-      document.getElementById('editNuevaColeccion').checked = !!nueva_coleccion;
-      renderEditPreviews();
-      document.getElementById('modalEditar').style.display = 'flex';
-    }
+    // EDITAR
+    function abrirModal(id,nombre,precio,categoria,stock,imagen,nueva_coleccion){ productoEditando=id; document.getElementById('editNombre').value=nombre||''; document.getElementById('editPrecio').value=precio||0; document.getElementById('editCategoria').value=categoria||''; document.getElementById('editStock').value=stock||0; document.getElementById('editImagen').value=imagen||''; document.getElementById('editNuevaColeccion').checked=!!nueva_coleccion; renderEditPreviews(); document.getElementById('modalEditar').style.display='flex'; }
 
-    async function guardarEdicion(){
-      const token = localStorage.getItem(tokenKey);
-      const producto = {
-        nombre: document.getElementById('editNombre').value.trim(),
-        precio: Number(document.getElementById('editPrecio').value),
-        categoria: document.getElementById('editCategoria').value,
-        stock: Number(document.getElementById('editStock').value),
-        imagen: document.getElementById('editImagen').value.trim(),
-        nueva_coleccion: document.getElementById('editNuevaColeccion').checked
-      };
-      await fetch(`${API_URL}/api/productos/${productoEditando}`, {method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify(producto)});
-      document.getElementById('modalEditar').style.display='none';
-      cargarProductos();
-    }
+    async function guardarEdicion(){ const token=sessionStorage.getItem(tokenKey); const producto={ nombre:document.getElementById('editNombre').value.trim(), precio:Number(document.getElementById('editPrecio').value), categoria:document.getElementById('editCategoria').value, stock:Number(document.getElementById('editStock').value), imagen:document.getElementById('editImagen').value.trim(), nueva_coleccion:document.getElementById('editNuevaColeccion').checked }; try{ await fetch(`/api/productos/${productoEditando}`,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(producto)}); document.getElementById('modalEditar').style.display='none'; await cargarProductos(); }catch(e){console.error(e); alert('Error al guardar');} }
 
     function cerrarModal(){ document.getElementById('modalEditar').style.display='none'; }
 
-    /* -------- Helpers -------- */
-    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"'`]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[c])); }
+    // Helpers
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>\"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[c])); }
     function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&#34;'); }
-
   </script>
 </body>
 </html>
