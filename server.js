@@ -25,6 +25,9 @@ app.use(
 );
 app.use(express.json());
 
+// 👉 SERVIR ARCHIVOS ESTÁTICOS (admin.html, css, js)
+app.use(express.static("public"));
+
 // ---------------------------------------------
 // AUTENTICACIÓN (bcrypt + JWT)
 // ---------------------------------------------
