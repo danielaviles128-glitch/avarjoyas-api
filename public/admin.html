@@ -1,290 +1,464 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel de administración - AVAR Joyas</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f8f8f8;
-      margin: 0;
-      padding: 40px;
-      color: #333;
+    :root{
+      --gold:#b6922e;
+      --gold-dark:#a38025;
+      --muted:#777;
+      --card:#fff;
+      --bg:#f6f6f6;
+      --maxw:980px;
     }
-    h1 {
-      text-align: center;
-      color: #b6922e;
-    }
-    form {
-      background: white;
-      max-width: 500px;
-      margin: 20px auto;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 5px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    button {
-      width: 100%;
-      background: #b6922e;
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #a38025;
-    }
-    .mensaje {
-      text-align: center;
-      margin-top: 20px;
-      font-weight: bold;
-      color: green;
-    }
+    *{box-sizing:border-box}
+    body { font-family: Inter, Arial, system-ui, -apple-system; background: var(--bg); margin: 0; padding: 28px; color: #222; display:flex; justify-content:center; }
+    .container{width:100%; max-width:var(--maxw);} 
+    header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px}
+    h1 { margin:0; color:var(--gold); font-size:20px }
+    .top-actions{display:flex; gap:10px; align-items:center}
+
+    /* Form */
+    .card{background:var(--card); padding:18px; border-radius:12px; box-shadow:0 6px 24px rgba(20,20,20,0.06);}
+    form{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start}
+    form .full{grid-column:1/3}
+    label{font-size:13px; color:#333; display:block; margin-bottom:6px}
+    input[type=text], input[type=number], select{width:100%; padding:10px; border-radius:8px; border:1px solid #ddd}
+    button.primary{background:var(--gold); color:#fff; padding:10px 14px; border-radius:8px; border:none; cursor:pointer}
+    button.ghost{background:#fff; border:1px solid #ddd; padding:8px 10px; border-radius:8px; cursor:pointer}
+
+    /* Upload row */
+    .upload-row{display:flex; gap:10px; align-items:center}
+    .upload-row input[type=file]{flex:1}
+    #estadoUpload{margin:0; font-size:13px; color:var(--muted)}
+
+    /* Previews */
+    #previews, #editPreviews{display:flex; gap:8px; flex-wrap:wrap}
+    .thumb{width:80px; height:80px; border-radius:8px; overflow:hidden; position:relative; border:1px solid #e6e6e6}
+    .thumb img{width:100%; height:100%; object-fit:cover}
+    .thumb button{position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer}
+
+    /* Productos list */
+    .controls{display:flex; gap:10px; align-items:center; margin:16px 0}
+    .controls input{padding:10px; border-radius:8px; border:1px solid #ddd}
+    .grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:12px}
+    .producto-card{padding:12px; border-radius:10px; background:var(--card); box-shadow:0 3px 12px rgba(10,10,10,0.04)}
+    .producto-card h4{margin:0 0 6px 0}
+    .producto-card small{display:block; color:var(--muted); word-break:break-all; font-size:12px}
+    .producto-actions{display:flex; gap:8px; margin-top:10px}
+
+    /* Pagination */
+    .pagination{display:flex; gap:6px; align-items:center; justify-content:center; margin-top:12px}
+    .pagination button{padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer}
+
+    /* Modal */
+    #modalEditar{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;}
+    #modalEditar .modal-card{width:100%; max-width:560px}
+
+    /* Login */
+    #loginOverlay{position:fixed; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0.4)); display:flex; align-items:center; justify-content:center; z-index:9999}
+    #loginBox{width:100%; max-width:420px}
+
+    @media (max-width:720px){ form{grid-template-columns:1fr} .grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
-  <h1>Panel de Administración - AVAR Joyas</h1>
-  
-  <!-- Formulario para agregar producto -->
-  <form id="formProducto">
-    <h3>Agregar nuevo producto</h3>
-    <label>Nombre del producto:</label>
-    <input type="text" id="nombre" required>
+  <div class="container">
+    <header>
+      <h1>Panel de Administración — AVAR Joyas</h1>
+      <div class="top-actions">
+        <div id="usuarioBadge" style="font-size:13px; color:var(--muted)"></div>
+        <button id="logoutBtn" class="ghost" style="display:none">Cerrar sesión</button>
+      </div>
+    </header>
 
-    <label>Precio:</label>
-    <input type="number" id="precio" required>
+    <!-- AGREGAR PRODUCTO -->
+    <section class="card">
+      <form id="formProducto">
+        <div>
+          <label>Nombre del producto</label>
+          <input type="text" id="nombre" required />
+        </div>
 
-    <label>Categoría:</label>
-    <input type="text" id="categoria" required>
+        <div>
+          <label>Precio</label>
+          <input type="number" id="precio" required />
+        </div>
 
-    <label>Stock:</label>
-    <input type="number" id="stock" required>
+        <div>
+          <label>Categoría</label>
+          <select id="categoria">
+            <option value="">-- Selecciona --</option>
+            <option value="collar">Collares</option>
+            <option value="aretes">Aretes</option>
+            <option value="tobilleras">Tobilleras</option>
+            <option value="pulseras">Pulseras</option>
+            <option value="anillos">Anillos</option>
+          </select>
+        </div>
 
-    <label>Ruta(s) de imagen (separadas por coma):</label>
-    <input type="text" id="imagen" placeholder="img/ejemplo1.jpg, img/ejemplo2.jpg">
-    <label>
-    <input type="checkbox" id="nueva_coleccion">
-      Nueva colección
-    </label>
+        <div>
+          <label>Stock</label>
+          <input type="number" id="stock" required />
+        </div>
 
-    <div id="previewContainer" style="text-align:center; margin:10px 0;">
-      <p style="font-size:14px; color:#777;">Vista previa:</p>
-      <div id="previews" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;"></div>
-    </div>
+        <div class="full">
+          <label>Ruta(s) de imagen (separadas por coma)</label>
+          <input type="text" id="imagen" placeholder="https://res.cloudinary.com/tu_cuenta/...jpg" />
+        </div>
 
-    <button type="submit">Agregar producto</button>
-  </form>
+        <div class="full upload-row">
+          <input type="file" id="fileUploader" accept="image/*" />
+          <button type="button" class="ghost" onclick="subirImagenCloudinary()">Subir imagen</button>
+          <p id="estadoUpload">No has subido nada aún</p>
+        </div>
 
-  <div class="mensaje" id="mensaje"></div>
+        <div class="full" style="display:flex; align-items:center; gap:12px">
+          <div style="display:flex; align-items:center; gap:8px">
+            <input type="checkbox" id="nueva_coleccion" style="width:18px; height:18px;" />
+            <label for="nueva_coleccion">¿Pertenece a la nueva colección?</label>
+          </div>
+          <div style="margin-left:auto; width:220px;">
+            <button type="submit" class="primary">Agregar producto</button>
+          </div>
+        </div>
 
-  <h2 style="text-align:center;">Productos existentes</h2>
-  <div id="listaProductos"></div>
+        <div class="full">
+          <div id="previewContainer">
+            <p style="margin:6px 0; color:var(--muted)">Vista previa</p>
+            <div id="previews"></div>
+          </div>
+        </div>
+      </form>
+    </section>
 
-  <!-- Modal de edición -->
-  <div id="modalEditar" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
-    <div style="background:white; padding:20px; border-radius:10px; max-width:500px; width:90%;">
-      <h3>Editar producto</h3>
-      <label>Nombre:</label>
-      <input type="text" id="editNombre">
-      <label>Precio:</label>
-      <input type="number" id="editPrecio">
-      <label>Categoría:</label>
-      <input type="text" id="editCategoria">
-      <label>Stock:</label>
-      <input type="number" id="editStock">
-      <label>Rutas de imagen (coma):</label>
-      <input type="text" id="editImagen">
-      <label style="margin-top:10px;">
-      <input type="checkbox" id="editNuevaColeccion">
-        Nueva colección
-      </label>
+    <div style="height:14px"></div>
 
-      <div id="editPreviewContainer" style="text-align:center; margin-top:10px;">
-        <p style="font-size:14px; color:#777;">Vista previa:</p>
-        <div id="editPreviews" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;"></div>
+    <!-- FILTROS / BUSCADOR -->
+    <section class="card" style="margin-top:10px">
+      <div class="controls">
+        <input id="buscador" placeholder="Buscar por nombre..." />
+        <select id="filtroCategoria">
+          <option value="">Todas las categorías</option>
+          <option value="collar">Collares</option>
+          <option value="aretes">Aretes</option>
+          <option value="tobilleras">Tobilleras</option>
+          <option value="pulseras">Pulseras</option>
+          <option value="anillos">Anillos</option>
+        </select>
+        <select id="orden" style="width:160px">
+          <option value="new">Orden: más recientes</option>
+          <option value="price-asc">Precio: menor a mayor</option>
+          <option value="price-desc">Precio: mayor a menor</option>
+        </select>
+        <div style="margin-left:auto; font-size:13px; color:var(--muted)"><span id="totalCount">0</span> productos</div>
       </div>
 
-      <div style="margin-top:10px; text-align:right;">
-        <button onclick="guardarEdicion()" style="background:#b6922e;color:white;border:none;padding:8px 12px;border-radius:6px;">Guardar</button>
-        <button onclick="cerrarModal()" style="background:#999;color:white;border:none;padding:8px 12px;border-radius:6px;">Cancelar</button>
+      <div id="productosGrid" class="grid"></div>
+      <div class="pagination" id="paginacion"></div>
+    </section>
+
+    <div style="height:20px"></div>
+    <div id="mensaje" style="text-align:center; color:green"></div>
+  </div>
+
+  <!-- MODAL EDITAR -->
+  <div id="modalEditar">
+    <div class="modal-card card" style="padding:18px;">
+      <h3>Editar producto</h3>
+      <label>Nombre</label>
+      <input type="text" id="editNombre" />
+      <label>Precio</label>
+      <input type="number" id="editPrecio" />
+      <label>Categoría</label>
+      <select id="editCategoria">
+        <option value="collar">Collares</option>
+        <option value="aretes">Aretes</option>
+        <option value="tobilleras">Tobilleras</option>
+        <option value="pulseras">Pulseras</option>
+        <option value="anillos">Anillos</option>
+      </select>
+      <label>Stock</label>
+      <input type="number" id="editStock" />
+      <label>Rutas de imagen</label>
+      <input type="text" id="editImagen" />
+
+      <div id="editPreviews" style="margin:10px 0"></div>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px">
+        <button onclick="guardarEdicion()" class="primary">Guardar</button>
+        <button onclick="cerrarModal()" class="ghost">Cancelar</button>
       </div>
     </div>
   </div>
 
+  <!-- LOGIN OVERLAY (usa autenticación server-side) -->
+  <div id="loginOverlay">
+    <div id="loginBox" class="card">
+      <h3 style="margin-top:0">Iniciar sesión</h3>
+      <label>Usuario</label>
+      <input id="loginUser" />
+      <label>Contraseña</label>
+      <input id="loginPass" type="password" />
+      <div style="display:flex; gap:8px; margin-top:10px">
+        <button id="loginBtn" class="primary">Entrar</button>
+        <div style="flex:1"></div>
+      </div>
+      <p id="loginMsg" style="color:red; margin-top:8px"></p>
+    </div>
+  </div>
+
   <script>
+    /* -------- CONFIG -------- */
     const API_URL = "https://avarjoyas-api.onrender.com";
+    const CLOUD_NAME = "dt2qovj9c"; // tu cloud name
+    const UPLOAD_PRESET = "ml_default"; // tu unsigned preset
 
-    const form = document.getElementById('formProducto');
-    const mensaje = document.getElementById('mensaje');
-    const lista = document.getElementById('listaProductos');
-    const modal = document.getElementById('modalEditar');
-    let productoEditando = null;
+    /* -------- Estado global (cliente) -------- */
+    let productos = [];
+    let currentPage = 1;
+    const perPage = 6;
 
-    // --- Agregar producto ---
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const producto = {
-        nombre: nombre.value,
-        precio: parseInt(precio.value),
-        categoria: categoria.value,
-        stock: parseInt(stock.value),
-        imagen: imagen.value,
-        nueva_coleccion: document.getElementById("nueva_coleccion").checked
-      };
+    /* -------- Autenticación -------- */
+    const tokenKey = "avar_token";
 
-
-      const res = await fetch(`${API_URL}/api/productos`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(producto)
-      });
-
-      if (res.ok) {
-        mensaje.textContent = '✅ Producto agregado correctamente';
-        mensaje.style.color = 'green';
-        form.reset();
-        cargarProductos();
-      } else {
-        mensaje.textContent = '❌ Error al agregar producto';
-        mensaje.style.color = 'red';
-      }
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem(tokenKey);
+      location.reload();
     });
 
-    // --- Cargar productos existentes ---
-    async function cargarProductos() {
+    async function checkAuth() {
+      const token = localStorage.getItem(tokenKey);
+      if (!token) return false;
+      // opcional: podrías verificar token con backend
+      try{
+        const res = await fetch(`${API_URL}/api/auth-check`, {headers:{'Authorization': 'Bearer '+token}});
+        if (res.ok){
+          const info = await res.json();
+          document.getElementById('usuarioBadge').innerText = info.user || 'admin';
+          document.getElementById('logoutBtn').style.display = 'inline-block';
+          document.getElementById('loginOverlay').style.display = 'none';
+          return true;
+        }
+      }catch(e){console.warn(e)}
+      return false;
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', async ()=>{
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value.trim();
+      document.getElementById('loginMsg').innerText='';
+      try{
+        const res = await fetch(`${API_URL}/api/login`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user:u,password:p})});
+        if (!res.ok) {
+          const err = await res.json();
+          document.getElementById('loginMsg').innerText = err.error || 'Credenciales inválidas';
+          return;
+        }
+        const data = await res.json();
+        localStorage.setItem(tokenKey, data.token);
+        await initApp();
+      }catch(e){document.getElementById('loginMsg').innerText='Error de conexión'}
+    });
+
+    /* -------- Inicia la app solo si autenticado -------- */
+    async function initApp(){
+      const ok = await checkAuth();
+      if (!ok) return;
+      cargarProductos();
+    }
+
+    initApp();
+
+    /* -------- FUNCIONES DE PRODUCTOS (frontend) -------- */
+    async function cargarProductos(){
       const res = await fetch(`${API_URL}/api/productos`);
-      const productos = await res.json();
+      productos = await res.json();
+      currentPage = 1;
+      renderProductos();
+    }
+
+    function getFiltered(){
+      const q = document.getElementById('buscador').value.toLowerCase();
+      const cat = document.getElementById('filtroCategoria').value;
+      let arr = productos.filter(p => (p.nombre||'').toLowerCase().includes(q));
+      if (cat) arr = arr.filter(p => p.categoria===cat);
+      const orden = document.getElementById('orden').value;
+      if (orden==='price-asc') arr.sort((a,b)=>a.precio-b.precio);
+      if (orden==='price-desc') arr.sort((a,b)=>b.precio-a.precio);
+      if (orden==='new') arr.sort((a,b)=>b.id - a.id);
+      return arr;
+    }
+
+    function renderProductos(){
+      const lista = document.getElementById('productosGrid');
+      const arr = getFiltered();
+      const total = arr.length;
+      document.getElementById('totalCount').innerText = total;
+
+      const start = (currentPage-1)*perPage;
+      const pageItems = arr.slice(start, start+perPage);
+
       lista.innerHTML = '';
-      productos.forEach(p => {
+      pageItems.forEach(p=>{
         const div = document.createElement('div');
-        div.style = "background:#fff; padding:10px; margin:10px auto; border-radius:10px; max-width:500px; box-shadow:0 2px 8px rgba(0,0,0,0.1)";
+        div.className = 'producto-card';
         div.innerHTML = `
-          <strong>${p.nombre}</strong><br>
-          $${p.precio} | ${p.categoria} | Stock: ${p.stock}<br>
-          <small>${p.imagen}</small><br>
-          <button onclick="abrirModal(${p.id}, '${p.nombre}', ${p.precio}, '${p.categoria}', ${p.stock}, '${p.imagen}', ${p.nueva_coleccion})" style="background:#3498db;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Editar</button>
-          <button onclick="eliminarProducto(${p.id})" style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Eliminar</button>
+          <h4>${escapeHtml(p.nombre)} ${p.nueva_coleccion?'<span style="color:var(--gold)">✨</span>':''}</h4>
+          <div style="display:flex; gap:10px; align-items:center">
+            <img src="${escapeAttr((p.imagen||'').split(',')[0]||'')}" alt="" style="width:80px; height:80px; object-fit:cover; border-radius:8px;" onerror="this.style.display='none'" />
+            <div style="flex:1">
+              <div>$${Number(p.precio).toLocaleString('es-ES')}</div>
+              <div style="color:var(--muted)">${escapeHtml(p.categoria)}</div>
+            </div>
+          </div>
+          <small>${escapeHtml(p.imagen||'')}</small>
+          <div class="producto-actions">
+            <button class="ghost" onclick="abrirModal(${p.id}, ${JSON.stringify(p.nombre)}, ${p.precio}, ${JSON.stringify(p.categoria)}, ${p.stock}, ${JSON.stringify(p.imagen)}, ${p.nueva_coleccion})">Editar</button>
+            <button class="ghost" style="background:#ffecec; border:1px solid #f5c2c2" onclick="eliminarProducto(${p.id})">Eliminar</button>
+          </div>
         `;
         lista.appendChild(div);
       });
+
+      renderPagination(Math.ceil(total/perPage));
     }
 
-    // --- Eliminar producto ---
-    async function eliminarProducto(id) {
-      if (!confirm('¿Seguro que deseas eliminar este producto?')) return;
-      const res = await fetch(`${API_URL}/api/productos/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        alert('✅ Producto eliminado');
-        cargarProductos();
-      } else {
-        alert('❌ Error al eliminar producto');
+    function renderPagination(pages){
+      const cont = document.getElementById('paginacion');
+      cont.innerHTML = '';
+      if (pages<=1) return;
+      for(let i=1;i<=pages;i++){
+        const btn = document.createElement('button');
+        btn.innerText = i;
+        if (i===currentPage) btn.style.fontWeight='700';
+        btn.addEventListener('click', ()=>{currentPage=i; renderProductos();});
+        cont.appendChild(btn);
       }
     }
 
-    // --- Editar producto (abrir modal) ---
-    function abrirModal(id, nombre, precio, categoria, stock, imagen, nueva_coleccion = false) {
-    productoEditando = id;
-    document.getElementById('editNombre').value = nombre;
-    document.getElementById('editPrecio').value = precio;
-    document.getElementById('editCategoria').value = categoria;
-    document.getElementById('editStock').value = stock;
-    document.getElementById('editImagen').value = imagen;
-    document.getElementById('editNuevaColeccion').checked = nueva_coleccion;
-    mostrarPrevisualizacionEditar(imagen);
-    modal.style.display = 'flex';
+    document.getElementById('buscador').addEventListener('input', ()=>{ currentPage=1; renderProductos(); });
+    document.getElementById('filtroCategoria').addEventListener('change', ()=>{ currentPage=1; renderProductos(); });
+    document.getElementById('orden').addEventListener('change', ()=>{ renderProductos(); });
+
+    async function eliminarProducto(id){
+      if (!confirm('¿Eliminar producto?')) return;
+      const token = localStorage.getItem(tokenKey);
+      await fetch(`${API_URL}/api/productos/${id}`, {method:'DELETE', headers:{'Authorization':'Bearer '+token}});
+      cargarProductos();
     }
 
-    // --- Guardar cambios ---
-    async function guardarEdicion() {
-    const producto = {
-      nombre: document.getElementById('editNombre').value,
-      precio: parseInt(document.getElementById('editPrecio').value),
-      categoria: document.getElementById('editCategoria').value,
-      stock: parseInt(document.getElementById('editStock').value),
-      imagen: document.getElementById('editImagen').value,
-      nueva_coleccion: document.getElementById('editNuevaColeccion').checked
-    };
-
-
-      const res = await fetch(`${API_URL}/api/productos/${productoEditando}`, {
-        method: 'PUT',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(producto)
-      });
-
-      if (res.ok) {
-        alert('✅ Producto actualizado');
-        modal.style.display = 'none';
-        cargarProductos();
-      } else {
-        alert('❌ Error al actualizar producto');
-      }
-    }
-
-    function cerrarModal() {
-      modal.style.display = 'none';
-    }
-
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) cerrarModal();
+    /* -------- AGREGAR PRODUCTO -------- */
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const token = localStorage.getItem(tokenKey);
+      const producto = {
+        nombre: document.getElementById('nombre').value.trim(),
+        precio: Number(document.getElementById('precio').value),
+        categoria: document.getElementById('categoria').value,
+        stock: Number(document.getElementById('stock').value),
+        imagen: document.getElementById('imagen').value.trim(),
+        nueva_coleccion: document.getElementById('nueva_coleccion').checked
+      };
+      const res = await fetch(`${API_URL}/api/productos`, {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify(producto)});
+      if (res.ok){ document.getElementById('mensaje').innerText='✔ Producto agregado'; form.reset(); document.getElementById('previews').innerHTML=''; cargarProductos(); }
+      else{ document.getElementById('mensaje').innerText='❌ Error al agregar' }
     });
 
-    // --- Vista previa de imágenes ---
-    document.getElementById("imagen").addEventListener("input", function () {
-      const contenedor = document.getElementById("previews");
-      contenedor.innerHTML = "";
-      const rutas = this.value.split(",");
-      rutas.forEach(ruta => {
-        const img = document.createElement("img");
-        img.src = ruta.trim();
-        img.style = "width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ccc;";
-        contenedor.appendChild(img);
+    /* -------- SUBIDA A CLOUDINARY (1 por vez, opción B) -------- */
+    async function subirImagenCloudinary(){
+      const fileInput = document.getElementById('fileUploader');
+      const estado = document.getElementById('estadoUpload');
+      const campoImagen = document.getElementById('imagen');
+      if (!fileInput.files.length){ estado.innerText='Selecciona una imagen'; estado.style.color='red'; return; }
+      const file = fileInput.files[0];
+      estado.innerText='Subiendo...'; estado.style.color='#b6922e';
+      const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', UPLOAD_PRESET); fd.append('folder','productos');
+      try{
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST', body:fd});
+        const data = await res.json();
+        if (data.secure_url){
+          estado.innerText='Subida ✔️'; estado.style.color='green';
+          if (campoImagen.value.trim()!=='') campoImagen.value += ', ' + data.secure_url; else campoImagen.value = data.secure_url;
+          campoImagen.dispatchEvent(new Event('input'));
+          fileInput.value = '';
+        } else { estado.innerText='Error al subir'; estado.style.color='red'; }
+      }catch(e){ console.error(e); estado.innerText='Error de red'; estado.style.color='red'; }
+    }
+
+    /* -------- PREVIEW + eliminar URL individual (add) -------- */
+    document.getElementById('imagen').addEventListener('input', ()=>{
+      const cont = document.getElementById('previews'); cont.innerHTML='';
+      const lista = document.getElementById('imagen').value.split(',').map(s=>s.trim()).filter(Boolean);
+      lista.forEach((url, idx)=>{
+        const t = document.createElement('div'); t.className='thumb';
+        const img = document.createElement('img'); img.src = url; img.alt='';
+        const btn = document.createElement('button'); btn.innerText='×';
+        btn.title='Eliminar imagen';
+        btn.addEventListener('click', ()=>{ removeImageFromInput('imagen', idx); });
+        t.appendChild(img); t.appendChild(btn); cont.appendChild(t);
       });
     });
 
-    function mostrarPrevisualizacionEditar(cadena) {
-      const contenedor = document.getElementById("editPreviews");
-      contenedor.innerHTML = "";
-      const rutas = cadena.split(",");
-      rutas.forEach(ruta => {
-        const img = document.createElement("img");
-        img.src = ruta.trim();
-        img.style = "width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ccc;";
-        contenedor.appendChild(img);
+    /* -------- PREVIEW + eliminar URL individual (edit modal) -------- */
+    document.getElementById('editImagen').addEventListener('input', ()=>{ renderEditPreviews(); });
+    function renderEditPreviews(){
+      const cont = document.getElementById('editPreviews'); cont.innerHTML='';
+      const lista = document.getElementById('editImagen').value.split(',').map(s=>s.trim()).filter(Boolean);
+      lista.forEach((url, idx)=>{
+        const t = document.createElement('div'); t.className='thumb';
+        const img = document.createElement('img'); img.src = url; img.alt='';
+        const btn = document.createElement('button'); btn.innerText='×';
+        btn.title='Eliminar imagen';
+        btn.addEventListener('click', ()=>{ removeImageFromInput('editImagen', idx); });
+        t.appendChild(img); t.appendChild(btn); cont.appendChild(t);
       });
     }
 
-    document.getElementById("editImagen").addEventListener("input", function () {
-      mostrarPrevisualizacionEditar(this.value);
-    });
+    function removeImageFromInput(inputId, index){
+      const el = document.getElementById(inputId);
+      const arr = el.value.split(',').map(s=>s.trim()).filter(Boolean);
+      arr.splice(index,1);
+      el.value = arr.join(', ');
+      el.dispatchEvent(new Event('input'));
+    }
 
+    /* -------- EDITAR -------- */
+    function abrirModal(id, nombre, precio, categoria, stock, imagen, nueva_coleccion){
+      productoEditando = id;
+      document.getElementById('editNombre').value = nombre || '';
+      document.getElementById('editPrecio').value = precio || 0;
+      document.getElementById('editCategoria').value = categoria || '';
+      document.getElementById('editStock').value = stock || 0;
+      document.getElementById('editImagen').value = imagen || '';
+      document.getElementById('editNuevaColeccion').checked = !!nueva_coleccion;
+      renderEditPreviews();
+      document.getElementById('modalEditar').style.display = 'flex';
+    }
 
-// === 🔒 Protección con contraseña simple ===
-const clave = prompt("Ingrese la clave de administrador:");
+    async function guardarEdicion(){
+      const token = localStorage.getItem(tokenKey);
+      const producto = {
+        nombre: document.getElementById('editNombre').value.trim(),
+        precio: Number(document.getElementById('editPrecio').value),
+        categoria: document.getElementById('editCategoria').value,
+        stock: Number(document.getElementById('editStock').value),
+        imagen: document.getElementById('editImagen').value.trim(),
+        nueva_coleccion: document.getElementById('editNuevaColeccion').checked
+      };
+      await fetch(`${API_URL}/api/productos/${productoEditando}`, {method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify(producto)});
+      document.getElementById('modalEditar').style.display='none';
+      cargarProductos();
+    }
 
-if (clave !== "Avar2025!") {
-  alert("Acceso denegado. No tienes permiso para ingresar.");
-  window.location.href = "/"; // Redirige al inicio o a tu página principal
-} else {
-  cargarProductos(); // Solo carga los productos si la clave es correcta
-}
+    function cerrarModal(){ document.getElementById('modalEditar').style.display='none'; }
+
+    /* -------- Helpers -------- */
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"'`]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[c])); }
+    function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&#34;'); }
+
   </script>
 </body>
 </html>

@@ -3,6 +3,9 @@ const cors = require("cors");
 const { Pool } = require("pg");
 require("dotenv").config();
 const nodemailer = require("nodemailer");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -17,6 +20,69 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// ---------------------------------------------
+// AUTENTICACIÓN (bcrypt + JWT)
+// ---------------------------------------------
+
+// Middleware para proteger rutas sensibles
+function requireAuth(req, res, next) {
+  const auth = req.headers.authorization || "";
+  const token = auth.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Token faltante" });
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = payload.user;
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: "Token inválido" });
+  }
+}
+
+// Login de administrador (usa variables de entorno)
+app.post("/api/login", async (req, res) => {
+  const { user, password } = req.body;
+
+  if (!user || !password) {
+    return res.status(400).json({ error: "Credenciales faltantes" });
+  }
+
+  const adminUser = process.env.ADMIN_USER;
+  const adminHash = process.env.ADMIN_PASS_HASH;
+
+  if (!adminUser || !adminHash) {
+    return res.status(500).json({ error: "Autenticación no configurada" });
+  }
+
+  if (user !== adminUser) {
+    return res.status(401).json({ error: "Usuario o contraseña incorrectos" });
+  }
+
+  const match = await bcrypt.compare(password, adminHash);
+  if (!match) {
+    return res.status(401).json({ error: "Usuario o contraseña incorrectos" });
+  }
+
+  const token = jwt.sign({ user }, process.env.JWT_SECRET, { expiresIn: "8h" });
+
+  res.json({ token });
+});
+
+// Ruta que valida el token (el frontend la usa al iniciar)
+app.get("/api/auth-check", (req, res) => {
+  const auth = req.headers.authorization || "";
+  const token = auth.split(" ")[1];
+
+  if (!token) return res.status(401).json({ error: "Token faltante" });
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    res.json({ ok: true, user: payload.user });
+  } catch (error) {
+    res.status(401).json({ error: "Token inválido" });
+  }
+});
+
 app.get("/api/productos", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM productos ORDER BY id DESC");
@@ -27,7 +93,7 @@ app.get("/api/productos", async (req, res) => {
   }
 });
 
-app.post("/api/productos", async (req, res) => {
+app.post("/api/productos", requireAuth, async (req, res) => {
   const { nombre, precio, categoria, stock, imagen, nueva_coleccion } = req.body;
 
   // Validaciones básicas
@@ -53,7 +119,7 @@ app.post("/api/productos", async (req, res) => {
   }
 });
 
-app.put("/api/productos/:id", async (req, res) => {
+app.put("/api/productos/:id", requireAuth, async (req, res) => {
   const { id } = req.params;
   const { nombre, precio, categoria, stock, imagen, nueva_coleccion } = req.body;
 
@@ -86,7 +152,7 @@ app.put("/api/productos/:id", async (req, res) => {
 });
 
 
-app.delete("/api/productos/:id", async (req, res) => {
+app.delete("/api/productos/:id", requireAuth, async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query("DELETE FROM productos WHERE id=$1", [id]);
@@ -125,7 +191,7 @@ app.post("/api/suscribirse", async (req, res) => {
   }
 });
 // === 📋 Obtener lista de suscriptores (con filtro y paginación) ===
-app.get("/api/suscriptores", async (req, res) => {
+app.get("/api/suscriptores", requireAuth, async (req, res) => {
   try {
     // Parámetros opcionales desde la URL
     const { search = "", limit = 50, offset = 0 } = req.query;
@@ -148,7 +214,7 @@ app.get("/api/suscriptores", async (req, res) => {
   }
 });
 // === 🗑️ Eliminar un suscriptor por ID ===
-app.delete("/api/suscriptores/:id", async (req, res) => {
+app.delete("/api/suscriptores/:id", requireAuth, async (req, res) => {
   const { id } = req.params;
   try {
     const result = await pool.query("DELETE FROM suscriptores WHERE id = $1 RETURNING *", [id]);
